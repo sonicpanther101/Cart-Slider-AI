@@ -64,9 +64,15 @@ def printNodesOrder(nodes):
 def printNodeInfo(node):
     print(node.id, node.parents, node.children, node.connectionWeights, node.value)
 
+def calculateNodes(nodes):
+    for node in nodes:
+        node.calculate()
+    
+    return nodes
+
 nodes = [
-node(0,[],[6,8]), node(1,[],[8]),    node(2,[],[9]),    node(3,[],[8,9]),        node(4,[6,7,9],[]), 
-node(5,[7,9],[]), node(6,[0,8],[4]), node(7,[8],[4,5]), node(8,[0,1,3],[6,7,9]), node(9,[2,3,8],[4,5])]
+node(0,[],[6,8]),  node(1,[],[8]),  node(2,[],[9]),          node(3,[],[8,9]), node(4,[6,7,9],[]), 
+node(6,[0,8],[4]), node(7,[8],[4]), node(8,[0,1,3],[6,7,9]), node(9,[2,3,8],[4])]
 
 nodes = sortNodes(nodes)
 

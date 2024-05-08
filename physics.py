@@ -77,7 +77,6 @@ class solver:
             ball.updatePosition(deltaTime, balls[0])
 
     def applyGravity(self, balls):
-        global extraForce
         for ball in balls:
             if ball.id != 0:
                 ball.accelerate(self.gravity)
@@ -112,13 +111,22 @@ links = [link(balls[0], balls[1], 100, 5, (255, 255, 255))]
 solverVariable = solver([0, -100])
 extraForce = 0
 
+environment = {
+    "balls": balls,
+    "links": links,
+    "solver": solverVariable,
+    "extraForce": extraForce
+}
+
+environments = [environment for i in range(10)]
+
 previousTime = 0
 startTime = time.time()
 deltaTime = 0
 
 j=0
 s=0
-def main():
+def main(environment):
     global previousTime, startTime, deltaTime, j,s
     
     if previousTime == 0:
@@ -129,7 +137,7 @@ def main():
     if deltaTime != 0:
         j+=1
         for i in range(subSteps):
-            solverVariable.update(links, balls, deltaTime/subSteps)
+            environment["solver"].update(environment["links"], environment["balls"], deltaTime/subSteps)
         
 if __name__ == "__main__":
     #while True:

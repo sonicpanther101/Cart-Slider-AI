@@ -37,7 +37,6 @@ def updateFrame(screen, centreCoord, font):
     
     if i % 50 == 0:
         fps = int(1/physics.deltaTime if physics.deltaTime != 0 else fps)
-        ballCount = len(physics.balls)
     textSurface1 = font.render("FPS:" + str(fps), False, (255, 255, 255))
     screen.blit(textSurface1, (0,0))
     
@@ -71,15 +70,26 @@ def main():
         
         # Update Objects
         
-        physics.main()
+        for i, environment in enumerate(physics.environments):
         
-        position = physics.balls[0].position[0]
-        xDirection = physics.balls[0].position[0] - physics.balls[1].position[0]
-        yDirection = physics.balls[0].position[1] - physics.balls[1].position[1]
-        angularVelocity = physics.balls[1].angularVelocity
-        
-        for agent in neural_network.generation:
-            pass
+            physics.main(environment)
+            
+            position = physics.environment["balls"][0].position[0]
+            xDirection = physics.environment["balls"][0].position[0] - physics.environment["balls"][1].position[0]
+            yDirection = physics.environment["balls"][0].position[1] - physics.environment["balls"][1].position[1]
+            angularVelocity = physics.environment["balls"][1].angularVelocity
+            
+            neural_network.generation[i][0].value = position
+            neural_network.generation[i][1].value = xDirection
+            neural_network.generation[i][2].value = yDirection
+            neural_network.generation[i][3].value = angularVelocity
+            
+            neural_network.calculateNodes(neural_network.generation[i])
+            
+            output = neural_network.generation[i][-1].value
+            
+            environment["extraForce"] = output
+            
      
 
         # Update Screen
