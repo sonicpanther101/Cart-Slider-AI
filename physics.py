@@ -17,6 +17,11 @@ class ball:
         velocity = self.position - self.oldPosition
         self.oldPosition = self.position[:]
         self.position = self.position + velocity + self.acceleration * deltaTime * deltaTime
+        if self.id == 0:
+            if -250 > self.position[0]:
+                self.position[0] = -250
+            elif self.position[0] > 250:
+                self.position[0] = 250
         self.acceleration = self.acceleration * 0
 
     def accelerate(self, acc):
@@ -33,13 +38,15 @@ class solver:
 
     def updatePositions(self, balls, deltaTime):
         for ball in balls:
-            if ball.id not in unmovingBalls:
-                ball.updatePosition(deltaTime)
+            ball.updatePosition(deltaTime)
 
     def applyGravity(self, balls):
+        global extraForce
         for ball in balls:
-            if ball.id not in unmovingBalls:
+            if ball.id != 0:
                 ball.accelerate(self.gravity)
+            else:
+                ball.accelerate([extraForce, 0])
 
     def solveLinks(self, links):
         for link in links:
@@ -58,17 +65,16 @@ class link:
         distance = norm(axis)
         normal = axis / distance
         delta = self.targetDistance - distance
-        if self.ball1.id not in unmovingBalls:
-            self.ball1.position = self.ball1.position + (normal * delta / 2)
-        if self.ball2.id not in unmovingBalls:
-            self.ball2.position = self.ball2.position - (normal * delta / 2)
+
+        # uncomment to have stick momentum to pull cart
+        self.ball2.position = self.ball2.position - (normal * delta) #/ 2)
+        #self.ball1.position = self.ball1.position + (normal * delta / 2) * np.array([1, 0])
 
 subSteps = 3
-balls = [ball(10, [0, -10*i], [(1-i)*100000, 0], [0, 0], (255, 255*i, 255*i), i)for i in range(2)]
-links = [link(balls[0], balls[1], 100, 5, (255, 255, 255)) for i in range(10)]
+balls = [ball(50, [0, -10*i], [0, 0], [0, 0], (255, 255*i, 255*i), i)for i in range(2)]
+links = [link(balls[0], balls[1], 100, 5, (255, 255, 255))]
 solverVariable = solver([0, -100])
-unmovingBalls = [0]
-#balls.append()
+extraForce = 0
 
 previousTime = 0
 startTime = time.time()

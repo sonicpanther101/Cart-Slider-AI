@@ -5,14 +5,6 @@ import numpy as np
 
 def drawObjects(screen, centreCoord):
     
-    for ball in physics.balls:
-        
-        coordinate = (ball.position[0] + centreCoord[0], centreCoord[1] - ball.position[1])
-        radius = ball.size
-        colour = ball.color
-        
-        pygame.draw.circle(screen, colour, coordinate, radius)
-    
     for link in physics.links:
         
         coordinate1 = (link.ball1.position[0] + centreCoord[0], centreCoord[1] - link.ball1.position[1])
@@ -21,6 +13,15 @@ def drawObjects(screen, centreCoord):
         colour = link.colour
         
         pygame.draw.line(screen, colour, coordinate1, coordinate2, width=thickness)
+        
+    for ball in physics.balls:
+        if ball.id == 0:
+            
+            width, height = ball.size, ball.size
+            left, top = ball.position[0] + centreCoord[0] - width / 2, centreCoord[1] - ball.position[1] - height / 2
+            colour = ball.color
+            
+            pygame.draw.rect(screen, colour, (left, top, width, height))
 
 i = 0
 fps = 0
@@ -41,6 +42,15 @@ def updateFrame(screen, centreCoord, font):
     
     pygame.display.flip()
 
+
+keyboard = {}
+
+def get_key(key):
+    try:
+        return keyboard[key]
+    except KeyError:
+        return False
+
 def main():
     
     pygame.init()
@@ -59,17 +69,27 @@ def main():
         centreCoord = (screen.get_width()/2, screen.get_height()/2)
         
         # Update Objects
-        physics.main()
         
+        if get_key(pygame.K_LEFT):
+            physics.extraForce = -50
+        elif get_key(pygame.K_RIGHT):
+            physics.extraForce = 50
+        if get_key(pygame.K_LEFT) and get_key(pygame.K_RIGHT) or not get_key(pygame.K_LEFT) and not get_key(pygame.K_RIGHT):
+            physics.extraForce = 0
+     
+        physics.main()
+
         # Update Screen
         updateFrame(screen,centreCoord, font)
-        
-        
         
         # Check if user has quit
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+            elif event.type == pygame.KEYDOWN:
+                keyboard[event.key] = True
+            elif event.type == pygame.KEYUP:
+                keyboard[event.key] = False
                 
 if __name__ == "__main__":
     main()
