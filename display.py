@@ -1,5 +1,6 @@
 import pygame
 import physics
+import neural_network
 import math
 import numpy as np
 
@@ -70,14 +71,16 @@ def main():
         
         # Update Objects
         
-        if get_key(pygame.K_LEFT):
-            physics.extraForce = -50
-        elif get_key(pygame.K_RIGHT):
-            physics.extraForce = 50
-        if get_key(pygame.K_LEFT) and get_key(pygame.K_RIGHT) or not get_key(pygame.K_LEFT) and not get_key(pygame.K_RIGHT):
-            physics.extraForce = 0
-     
         physics.main()
+        
+        position = physics.balls[0].position[0]
+        xDirection = physics.balls[0].position[0] - physics.balls[1].position[0]
+        yDirection = physics.balls[0].position[1] - physics.balls[1].position[1]
+        angularVelocity = physics.balls[1].angularVelocity
+        
+        for agent in neural_network.generation:
+            pass
+     
 
         # Update Screen
         updateFrame(screen,centreCoord, font)
