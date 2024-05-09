@@ -1,8 +1,8 @@
 import pygame
 import physics
-import neural_network
-import math
+import neural_network as nn
 import numpy as np
+import random
 
 def drawObjects(screen, centreCoord):
     
@@ -53,7 +53,7 @@ def get_key(key):
 
 def main():
     
-    pygame.init()
+    """pygame.init()
 
     screen = pygame.display.set_mode((860, 640), pygame.RESIZABLE)
     
@@ -62,47 +62,69 @@ def main():
     
     drawObjects(screen, (screen.get_width()/2, screen.get_height()/2))
 
-    pygame.display.flip()
+    pygame.display.flip()"""
 
     while True:
 
-        centreCoord = (screen.get_width()/2, screen.get_height()/2)
+        #               centreCoord = (screen.get_width()/2, screen.get_height()/2)
         
         # Update Objects
         
-        for i, environment in enumerate(physics.environments):
-        
+        for agentID, environment in enumerate(physics.environments):
+            
+            # Update Physics frame
+            
             physics.main(environment)
+            
+            # get NN output
             
             position = physics.environment["balls"][0].position[0]
             xDirection = physics.environment["balls"][0].position[0] - physics.environment["balls"][1].position[0]
             yDirection = physics.environment["balls"][0].position[1] - physics.environment["balls"][1].position[1]
             angularVelocity = physics.environment["balls"][1].angularVelocity
             
-            neural_network.generation[i][0].value = position
-            neural_network.generation[i][1].value = xDirection
-            neural_network.generation[i][2].value = yDirection
-            neural_network.generation[i][3].value = angularVelocity
+            nn.generation[agentID]["agent"][0].value = position
+            nn.generation[agentID]["agent"][1].value = xDirection
+            nn.generation[agentID]["agent"][2].value = yDirection
+            nn.generation[agentID]["agent"][3].value = angularVelocity
             
-            neural_network.calculateNodes(neural_network.generation[i])
+            nn.generation[agentID]["agent"] = nn.calculateNodes(nn.generation[agentID]["agent"])
             
-            output = neural_network.generation[i][-1].value
+            output = nn.generation[agentID]["agent"][-1].value
+            
+            nn.generation[agentID]["agent"] = nn.resetNodes(nn.generation[agentID]["agent"])
+            
+            print(output)
             
             environment["extraForce"] = output
             
-     
+            # update fitness
+            
+            nn.generation[agentID]["fitness"] += 1 if physics.environment["balls"][1].position[2] > 0 else 0
+        
+        # Reset Objects for new generation
+
+        if physics.j % 10000 == 0:
+            
+            nn.generation = nn.sortGenerationByFitness(nn.generation)
+            
+            nn.nextGeneration.extend(nn.generation[:int(len(nn.generation) * 0.3)])
+            
+            agentsToMutate = [random.choices(nn.generation, weights=[agent["fitness"] for agent in nn.generation]) for i in range(int(len(nn.generation) * 0.7)) ]
+            
+            mutatedAgents = nn.mutateAgents(agentsToMutate)
 
         # Update Screen
-        updateFrame(screen,centreCoord, font)
+        #                       updateFrame(screen,centreCoord, font)
         
         # Check if user has quit
-        for event in pygame.event.get():
+        """for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
             elif event.type == pygame.KEYDOWN:
                 keyboard[event.key] = True
             elif event.type == pygame.KEYUP:
-                keyboard[event.key] = False
+                keyboard[event.key] = False"""
                 
 if __name__ == "__main__":
     main()

@@ -125,13 +125,12 @@ startTime = time.time()
 deltaTime = 0
 
 j=0
-s=0
 def main(environment):
-    global previousTime, startTime, deltaTime, j,s
+    global previousTime, startTime, deltaTime, j
     
     if previousTime == 0:
         previousTime = time.time()
-    deltaTime = time.time() - previousTime
+    deltaTime = 1/100#time.time() - previousTime
     previousTime = time.time()
     
     if deltaTime != 0:
