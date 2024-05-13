@@ -88,25 +88,48 @@ def sortGenerationByFitness(generation):
     return sorted(generation, key=lambda x: x["fitness"], reverse=True)
 
 def mutateAgents(agentsToMutate):
+    
+    mutatedAgents = []
+    
     for agent in agentsToMutate:
         
         match random.choice([0,1,2,3]):
             case 0: # Nothing
                 pass
             case 1: # New Connection
-                
+                while True:
+                    node1Index = random.randint(0,len(agent["agent"])-1)
+                    node2Index = random.randint(0,len(agent["agent"])-1)
+                    
+                    if node1Index < node2Index and \
+((len(agent["agent"][node1Index].parents) == 0) + (len(agent["agent"][node2Index].parents) == 0) <=1 ) and \
+((len(agent["agent"][node1Index].children) == 0) + (len(agent["agent"][node2Index].children) == 0) <=1 ) and \
+(agent["agent"][node2Index].id not in agent["agent"][node1Index].children) and \
+(agent["agent"][node1Index].id not in agent["agent"][node2Index].parents):
+                        break
+                    
+                agent["agent"][node1Index].children.append(agent["agent"][node2Index].id)
+                agent["agent"][node1Index].connectionWeights.append(random.uniform(-1, 1))
+                agent["agent"][node2Index].parents.append(agent["agent"][node1Index].id)
                 
             case 2: # New Node
-                pass
+                randomNodeIndex = random.randint(0, len(agent["agent"])-2) # -2 to avoid output node
+                
+                
+                
             case 3: # Weight Modification
                 
-                weightIndex = random.randint(0, len(random.choice(agent["agent"]).connectionWeights) - 1)
+                randomNodeIndex = random.randint(0, len(agent["agent"])-2) # -2 to avoid output node
                 
-                random.choice(agent["agent"]).connectionWeights[weightIndex] = random.uniform(-1, 1)
+                randomWeightIndex = random.randint(0, len(agent["agent"][randomNodeIndex].connectionWeights)-1)
+                
+                agent["agent"][randomNodeIndex].connectionWeights[randomWeightIndex] = random.uniform(-1, 1)
+                
+        mutatedAgents.append(agent)
 
 nodes = [
-node(0,[],[6,8]),  node(1,[],[8]),  node(2,[],[9]),          node(3,[],[8,9]), node(4,[6,7,9],[]), 
-node(6,[0,8],[4]), node(7,[8],[4]), node(8,[0,1,3],[6,7,9]), node(9,[2,3,8],[4])]
+node(0,[],[5,7]),  node(1,[],[7]),  node(2,[],[8]),          node(3,[],[7,8]), node(4,[5,6,8],[]), 
+node(5,[0,7],[4]), node(6,[7],[4]), node(7,[0,1,3],[5,6,8]), node(8,[2,3,7],[4])]
 
 nodes = sortNodes(nodes)
 
