@@ -3,6 +3,8 @@ import physics
 import neural_network as nn
 import numpy as np
 import random
+import pickle
+import copy
 
 def drawObjects(screen, centreCoord):
     
@@ -94,29 +96,38 @@ def main():
             
             nn.generation[agentID]["agent"] = nn.resetNodes(nn.generation[agentID]["agent"])
             
-            print(output)
+            if physics.j % 100 == 0:
+                pass#print(f'agent {agentID}\ny of pendulum: {physics.environment["balls"][1].position[1]}\noutput: {output}')
             
             environment["extraForce"] = output
             
             # update fitness
             
-            nn.generation[agentID]["fitness"] += 1 if physics.environment["balls"][1].position[2] > 0 else 0
+            nn.generation[agentID]["fitness"] += nn.fitness(physics.environment["balls"][1].position[1])
         
         # Reset Objects for new generation
 
-        if physics.j % 10000 == 0:
+        if physics.j % nn.generationLength == 0:
             
-            nn.generation = nn.sortGenerationByFitness(nn.generation)
+            print(f'Generation {physics.j/nn.generationLength}')
             
-            nn.nextGeneration.extend(nn.generation[:int(len(nn.generation) * 0.3)])
+            if physics.j/nn.generationLength != 1:
+                # Open a file for writing in binary mode
+                with open(f'generation{int(physics.j/nn.generationLength)}.txt', 'wb') as file:
+                    # Pickle the list and write it to the file
+                    pickle.dump(nn.generation, file)
             
-            agentsToMutate = [random.choices(nn.generation, weights=[agent["fitness"] for agent in nn.generation]) for i in range(int(len(nn.generation) * 0.7)) ]
+            nn.nextGeneration = copy.deepcopy(nn.generation[:int(len(nn.generation) * 0.3)])
+            
+            agentsToMutate = random.choices(copy.deepcopy(nn.generation), weights=[agent["fitness"] for agent in nn.generation],k= int(len(nn.generation) * 0.7))
             
             mutatedAgents = nn.mutateAgents(agentsToMutate)
             
             nn.nextGeneration.extend(mutatedAgents)
             
-            nn.generation = nn.nextGeneration
+            nn.generation = copy.deepcopy(nn.nextGeneration)
+            
+            nn.generation = nn.sortGenerationByFitness(nn.generation)
 
         # Update Screen
         #                       updateFrame(screen,centreCoord, font)
