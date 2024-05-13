@@ -87,6 +87,14 @@ def resetNodes(nodes):
 def sortGenerationByFitness(generation):
     return sorted(generation, key=lambda x: x["fitness"], reverse=True)
 
+def getIndexFromID(nodes, id):
+    for node in nodes:
+        if node.id == id:
+            return nodes.index(node)
+
+def getIDFromIndex(nodes, index):
+    return nodes[index].id
+
 def mutateAgents(agentsToMutate):
     
     mutatedAgents = []
@@ -113,9 +121,23 @@ def mutateAgents(agentsToMutate):
                 agent["agent"][node2Index].parents.append(agent["agent"][node1Index].id)
                 
             case 2: # New Node
-                randomNodeIndex = random.randint(0, len(agent["agent"])-2) # -2 to avoid output node
+                randomNode1Index = random.randint(0, len(agent["agent"])-2) # -2 to avoid output node
+                randomNode2ID = random.choice(agent["agent"][randomNode1Index].children)
+                randomNode2Index = getIndexFromID(agent["agent"], randomNode2ID)
+                randomNode1ID = getIDFromIndex(agent["agent"], randomNode1Index)
+                newNodeID = len(agent["agent"])
                 
+                # Break the old connection
+                agent["agent"][randomNode1Index].children.remove(randomNode2ID)
+                agent["agent"][randomNode2Index].parents.remove(randomNode1ID)
                 
+                # Add the new connection
+                agent["agent"][randomNode1Index].children.append(newNodeID)
+                agent["agent"][randomNode1Index].connectionWeights.append(random.uniform(-1, 1))
+                agent["agent"][randomNode2Index].parents.append(newNodeID)
+                
+                # Add the new node of the connection
+                agent["agent"].append(node(newNodeID, [randomNode1ID], [randomNode2ID]))
                 
             case 3: # Weight Modification
                 

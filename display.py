@@ -113,6 +113,10 @@ def main():
             agentsToMutate = [random.choices(nn.generation, weights=[agent["fitness"] for agent in nn.generation]) for i in range(int(len(nn.generation) * 0.7)) ]
             
             mutatedAgents = nn.mutateAgents(agentsToMutate)
+            
+            nn.nextGeneration.extend(mutatedAgents)
+            
+            nn.generation = nn.nextGeneration
 
         # Update Screen
         #                       updateFrame(screen,centreCoord, font)
