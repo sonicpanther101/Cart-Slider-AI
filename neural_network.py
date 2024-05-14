@@ -146,8 +146,7 @@ def mutateAgents(agentsToMutate):
                     agent["agent"][node1Index].connectionWeights.append(random.uniform(-1, 1))
                     agent["agent"][node2Index].parents.append(agent["agent"][node1Index].id)
                     print(agent["agent"][node2Index].parents, agent["agent"][node1Index].children)
-                except:
-                    pass
+                except:...
                 
             case 2: # New Node
                 print("New Node")
