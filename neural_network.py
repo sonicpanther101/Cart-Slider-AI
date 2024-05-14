@@ -181,8 +181,8 @@ def mutateAgents(agentsToMutate):
         print("-"*30)
         mutatedAgents.append(agent)
 
-nodes = [node(i, type="input") for i in range(4)]
-nodes.append(node(4, type="output"))
+nodes = [node(i, [], [], type="input") for i in range(4)]
+nodes.append(node(4, [], [], type="output"))
 
 nodes = sortNodes(nodes)
 
