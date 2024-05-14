@@ -1,2 +1,1 @@
-import random
-print("".join(random.choice("Hello World!",k=12)))
+print(27**(1/3))

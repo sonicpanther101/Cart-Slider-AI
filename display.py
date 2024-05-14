@@ -97,7 +97,7 @@ def main():
             nn.generation[agentID]["agent"] = nn.resetNodes(nn.generation[agentID]["agent"])
             
             if physics.j % 100 == 0:
-                pass#print(f'agent {agentID}\ny of pendulum: {physics.environment["balls"][1].position[1]}\noutput: {output}')
+                pass#(f'agent {agentID}\ny of pendulum: {physics.environment["balls"][1].position[1]}\noutput: {output}')
             
             environment["extraForce"] = output
             
@@ -111,11 +111,16 @@ def main():
             
             print(f'Generation {physics.j/nn.generationLength}')
             
+            
             if physics.j/nn.generationLength != 1:
                 # Open a file for writing in binary mode
                 with open(f'generation{int(physics.j/nn.generationLength)}.txt', 'wb') as file:
                     # Pickle the list and write it to the file
                     pickle.dump(nn.generation, file)
+            
+            nn.generation = nn.sortGenerationByFitness(nn.generation)
+            
+            print("fitness:",nn.generation[0]["fitness"])
             
             nn.nextGeneration = copy.deepcopy(nn.generation[:int(len(nn.generation) * 0.3)])
             
@@ -127,7 +132,8 @@ def main():
             
             nn.generation = copy.deepcopy(nn.nextGeneration)
             
-            nn.generation = nn.sortGenerationByFitness(nn.generation)
+            for agent in nn.generation:
+                agent["agent"] = nn.sortNodes(agent["agent"])
 
         # Update Screen
         #                       updateFrame(screen,centreCoord, font)

@@ -99,20 +99,20 @@ def fitness(x):
     return 100 * math.exp(3 * (x/100 - 1))
 
 def mutateAgents(agentsToMutate):
-    print("mutating")
+    #print("mutating")
     
     for i in range(len(agentsToMutate)):
-        print("agent:", i)
+        """print("agent:", i)
         printNodesInfo(agentsToMutate[i]["agent"]) 
-        print("-"*30)
+        print("-"*30)"""
     
     mutatedAgents = []
     
     for agentIndex, agentTemp in enumerate(agentsToMutate):
         agent = copy.deepcopy(agentTemp)
-        print("pre mutation agent:", agentIndex)
+        """print("pre mutation agent:", agentIndex)
         printNodesInfo(agent["agent"])
-        print("-"*30)
+        print("-"*30)"""
         
         options = [0,1]
         
@@ -145,41 +145,69 @@ def mutateAgents(agentsToMutate):
                     agent["agent"][node1Index].children.append(agent["agent"][node2Index].id)
                     agent["agent"][node1Index].connectionWeights.append(random.uniform(-1, 1))
                     agent["agent"][node2Index].parents.append(agent["agent"][node1Index].id)
-                    print(agent["agent"][node2Index].parents, agent["agent"][node1Index].children)
+                    print(node1Index, agent["agent"][node1Index].children)
+                    print(node2Index, agent["agent"][node2Index].parents)
                 except:...
                 
             case 2: # New Node
                 print("New Node")
-                randomNode1Index = random.randint(0, len(agent["agent"])-2) # -2 to avoid output node
-                randomNode2ID = random.choice(agent["agent"][randomNode1Index].children)
-                randomNode2Index = getIndexFromID(agent["agent"], randomNode2ID)
-                randomNode1ID = getIDFromIndex(agent["agent"], randomNode1Index)
-                newNodeID = len(agent["agent"])
+                unusableNodes = []
                 
-                # Break the old connection
-                agent["agent"][randomNode1Index].children.remove(randomNode2ID)
-                agent["agent"][randomNode2Index].parents.remove(randomNode1ID)
+                while len(unusableNodes) != len(agent["agent"]):
                 
-                # Add the new connection
-                agent["agent"][randomNode1Index].children.append(newNodeID)
-                agent["agent"][randomNode1Index].connectionWeights.append(random.uniform(-1, 1))
-                agent["agent"][randomNode2Index].parents.append(newNodeID)
-                
-                # Add the new node of the connection
-                agent["agent"].append(node(newNodeID, [randomNode1ID], [randomNode2ID]))
+                    randomNode1Index = random.randint(0, len(agent["agent"])-2) # -2 to avoid output node
+                    
+                    if len(agent["agent"][randomNode1Index].children) == 0:
+                        unusableNodes.append(randomNode1Index)
+                        continue
+                    
+                    randomNode2ID = random.choice(agent["agent"][randomNode1Index].children)
+                    randomNode2Index = getIndexFromID(agent["agent"], randomNode2ID)
+                    randomNode1ID = getIDFromIndex(agent["agent"], randomNode1Index)
+                    newNodeID = len(agent["agent"])
+                    
+                    #if # check if nodes are connected
+                    
+                    # Break the old connection
+                    print(randomNode1Index, agent["agent"][randomNode1Index].children)
+                    print(randomNode2Index, agent["agent"][randomNode2Index].parents)
+                    agent["agent"][randomNode1Index].children.remove(randomNode2ID)
+                    agent["agent"][randomNode2Index].parents.remove(randomNode1ID)
+                    
+                    # Add the new connection
+                    agent["agent"][randomNode1Index].children.append(newNodeID)
+                    agent["agent"][randomNode1Index].connectionWeights.append(random.uniform(-1, 1))
+                    agent["agent"][randomNode2Index].parents.append(newNodeID)
+                    
+                    # Add the new node of the connection
+                    agent["agent"].append(node(newNodeID, [randomNode1ID], [randomNode2ID]))
+                    
+                    break
                 
             case 3: # Weight Modification
-                print("Weight Modification")              
-                randomNodeIndex = random.randint(0, len(agent["agent"])-2) # -2 to avoid output node
+                print("Weight Modification")
+                unusableNodes = []
                 
-                randomWeightIndex = random.randint(0, len(agent["agent"][randomNodeIndex].connectionWeights)-1)
-            
-                agent["agent"][randomNodeIndex].connectionWeights[randomWeightIndex] = random.uniform(-1, 1)
+                while len(unusableNodes) != len(agent["agent"]):
+                    
+                    randomNodeIndex = random.randint(0, len(agent["agent"])-2) # -2 to avoid output node
+                    
+                    if len(agent["agent"][randomNodeIndex].connectionWeights) == 0:
+                        unusableNodes.append(randomNodeIndex)
+                        continue
+                    
+                    randomWeightIndex = random.randint(0, len(agent["agent"][randomNodeIndex].connectionWeights)-1)
+                
+                    agent["agent"][randomNodeIndex].connectionWeights[randomWeightIndex] = random.uniform(-1, 1)
+                    break
+                print("weight modified")
         
-        print("post mutation agent:", agentIndex)
+        """print("post mutation agent:", agentIndex)
         printNodesInfo(agent["agent"])
-        print("-"*30)
+        print("-"*30)"""
         mutatedAgents.append(agent)
+    
+    return mutatedAgents
 
 nodes = [node(i, [], [], type="input") for i in range(4)]
 nodes.append(node(4, [], [], type="output"))
@@ -187,7 +215,7 @@ nodes.append(node(4, [], [], type="output"))
 nodes = sortNodes(nodes)
 
 generation = [{"agent" : nodes,
-               "fitness":0} for i in range(10)]
+               "fitness":0} for i in range(1000)]
 generationLength = 10000 # in frames of environment
 
 nextGeneration = []
