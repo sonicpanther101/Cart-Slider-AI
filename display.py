@@ -44,6 +44,7 @@ def updateFrame(screen, centreCoord, font):
 
 
 keyboard = {}
+movementSpeed = 10
 
 def get_key(key):
     try:
@@ -71,13 +72,13 @@ def main():
         # Update Objects
         
         if get_key(pygame.K_LEFT):
-            physics.extraForce = -50
+            physics.environments[0]["cartVelocity"] = np.array([-movementSpeed, 0])
         elif get_key(pygame.K_RIGHT):
-            physics.extraForce = 50
+            physics.environments[0]["cartVelocity"] = np.array([movementSpeed, 0])
         if get_key(pygame.K_LEFT) and get_key(pygame.K_RIGHT) or not get_key(pygame.K_LEFT) and not get_key(pygame.K_RIGHT):
-            physics.extraForce = 0
+            physics.environments[0]["cartVelocity"] = np.array([0, 0])
      
-        physics.main()
+        physics.main(physics.environments[0])
 
         # Update Screen
         updateFrame(screen,centreCoord, font)
