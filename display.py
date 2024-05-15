@@ -1,10 +1,11 @@
-import pygame
+#import pygame
 import physics
 import neural_network as nn
-import numpy as np
 import random
 import pickle
 import copy
+import time
+import threading
 
 def drawObjects(screen, centreCoord):
     
@@ -53,6 +54,11 @@ def get_key(key):
     except KeyError:
         return False
 
+previousTime = 0
+startTime = time.time()
+deltaTime = 0
+threadsToUse = 10
+
 def main():
     
     """pygame.init()
@@ -67,60 +73,46 @@ def main():
     pygame.display.flip()"""
 
     while True:
+        
+        global previousTime, startTime, deltaTime
 
         #               centreCoord = (screen.get_width()/2, screen.get_height()/2)
         
         # Update Objects
         
-        for agentID, environment in enumerate(physics.environments):
+        threads = []
+        step = int(len(physics.environments)/threadsToUse)
+        
+        for i in range(threadsToUse):
+            threads.append(threading.Thread(target=nn.stepForwardOneFrame, args=(physics.environments[step*i:step*(i+1)], step*i)))
+            threads[-1].start()
             
-            # Update Physics frame
-            
-            physics.main(environment)
-            
-            # get NN output
-            
-            position = physics.environment["balls"][0].position[0]
-            xDirection = physics.environment["balls"][0].position[0] - physics.environment["balls"][1].position[0]
-            yDirection = physics.environment["balls"][0].position[1] - physics.environment["balls"][1].position[1]
-            angularVelocity = physics.environment["balls"][1].angularVelocity
-            
-            nn.generation[agentID]["agent"][0].value = position
-            nn.generation[agentID]["agent"][1].value = xDirection
-            nn.generation[agentID]["agent"][2].value = yDirection
-            nn.generation[agentID]["agent"][3].value = angularVelocity
-            
-            nn.generation[agentID]["agent"] = nn.calculateNodes(nn.generation[agentID]["agent"])
-            
-            output = nn.generation[agentID]["agent"][-1].value
-            
-            nn.generation[agentID]["agent"] = nn.resetNodes(nn.generation[agentID]["agent"])
-            
-            if physics.j % 100 == 0:
-                pass#(f'agent {agentID}\ny of pendulum: {physics.environment["balls"][1].position[1]}\noutput: {output}')
-            
-            environment["extraForce"] = output
-            
-            # update fitness
-            
-            nn.generation[agentID]["fitness"] += nn.fitness(physics.environment["balls"][1].position[1])
+        for thread in threads:
+            thread.join()
         
         # Reset Objects for new generation
 
-        if physics.j % nn.generationLength == 0:
+        if physics.environments[0]["frames"] % nn.generationLength == 0:
             
-            print(f'Generation {physics.j/nn.generationLength}')
+            deltaTime = time.time() - previousTime
+            previousTime = time.time()
             
+            if physics.environments[0]["frames"]/nn.generationLength == 5:
+                pass#exit()
             
-            if physics.j/nn.generationLength != 1:
-                # Open a file for writing in binary mode
-                with open(f'generation{int(physics.j/nn.generationLength)}.txt', 'wb') as file:
-                    # Pickle the list and write it to the file
-                    pickle.dump(nn.generation, file)
+            print(f'Generation {physics.environments[0]["frames"]/nn.generationLength:.0f}')
+            print(f"generation took {(deltaTime):.2f} seconds")
             
             nn.generation = nn.sortGenerationByFitness(nn.generation)
             
-            print("fitness:",nn.generation[0]["fitness"])
+            if physics.environments[0]["frames"]/nn.generationLength != 1:
+                # Open a file for writing in binary mode
+                with open(f'generation{int(physics.environments[0]["frames"]/nn.generationLength)}.txt', 'wb') as file:
+                    # Pickle the list and write it to the file
+                    pickle.dump(nn.generation, file)
+            
+            print(f"fitness: {(nn.generation[0]["fitness"]/100000)*100:.2f}%")
+            nn.printNodesInfo(nn.generation[random.randint(0,len(nn.generation)-1)]["agent"])
             
             nn.nextGeneration = copy.deepcopy(nn.generation[:int(len(nn.generation) * 0.3)])
             

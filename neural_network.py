@@ -1,5 +1,6 @@
 import numpy as np
 import random, copy, math
+import physics
 
 class node:
     def __init__(self, id, parents=[], children=[], type="hidden"):
@@ -35,6 +36,7 @@ def sortNodes(nodes):
     
     sortedNodes = []
     
+    #print("started sorting")
     while len(tempNodes) > 0:
         nodesToProcess = []
         
@@ -45,6 +47,7 @@ def sortNodes(nodes):
         
         for node in nodesToProcess:
             sortedNodes.append(node)
+    #print("finished sorting")
     
     return sortedNodes
 
@@ -56,7 +59,10 @@ def removeNode(nodes, nodeIndex):
 
         for childNode in tempNodes:
             if childNode.id == childID:
-                childNode.parents.remove(nodes[nodeIndex].id)
+                try:
+                    childNode.parents.remove(nodes[nodeIndex].id)
+                except:
+                    pass#print("wtf")
 
     return tempNodes
 
@@ -71,7 +77,7 @@ def printNodesOrder(nodes):
     print(", ".join(output))
     
 def printNodeInfo(node):
-    print(node.id, node.parents, node.children, node.connectionWeights, node.value)
+    print(node.id, node.parents, node.children, node.connectionWeights, node.value, node.type)
 
 def calculateNodes(nodes):
     for node in nodes:
@@ -83,6 +89,42 @@ def resetNodes(nodes):
     for node in nodes:
         node.value = 0
     return nodes
+
+def stepForwardOneFrame(environments, offset):
+    for agentID, environment in enumerate(environments):
+        global generation
+        agentID += offset
+        
+        # Update Physics frame
+                
+        physics.main(environment)
+        
+        # get NN output
+        
+        position = physics.environment["balls"][0].position[0]
+        xDirection = physics.environment["balls"][0].position[0] - physics.environment["balls"][1].position[0]
+        yDirection = physics.environment["balls"][0].position[1] - physics.environment["balls"][1].position[1]
+        angularVelocity = physics.environment["balls"][1].angularVelocity
+        
+        generation[agentID]["agent"][0].value = position
+        generation[agentID]["agent"][1].value = xDirection
+        generation[agentID]["agent"][2].value = yDirection
+        generation[agentID]["agent"][3].value = angularVelocity
+        
+        generation[agentID]["agent"] = calculateNodes(generation[agentID]["agent"])
+        
+        output = generation[agentID]["agent"][-1].value
+        
+        generation[agentID]["agent"] = resetNodes(generation[agentID]["agent"])
+        
+        if environment["frames"] % 100 == 0:
+            pass#(f'agent {agentID}\ny of pendulum: {physics.environment["balls"][1].position[1]}\noutput: {output}')
+        
+        environment["extraForce"] = output
+        
+        # update fitness
+        
+        generation[agentID]["fitness"] += fitness(physics.environment["balls"][1].position[1])
 
 def sortGenerationByFitness(generation):
     return sorted(generation, key=lambda x: x["fitness"], reverse=True)
@@ -122,15 +164,14 @@ def mutateAgents(agentsToMutate):
         
         match random.choice(options):
             case 0: # Nothing
-                print("Nothing")
+                #print("Nothing")
                 pass
             case 1: # New Connection
-                print("New Connection")
-                errorCounter = 0
-                while True:
-                    if errorCounter > 100:
-                        print("error")
-                        break
+                #print("New Connection")
+                tries = 0
+                while tries > 100:
+                    tries += 1
+
                     node1Index = random.randint(0,len(agent["agent"])-1)
                     node2Index = random.randint(0,len(agent["agent"])-1)
                                         
@@ -140,20 +181,19 @@ def mutateAgents(agentsToMutate):
 (agent["agent"][node2Index].id not in agent["agent"][node1Index].children) and \
 (agent["agent"][node1Index].id not in agent["agent"][node2Index].parents):
                         break
-                    errorCounter += 1
+                    
                 try:
                     agent["agent"][node1Index].children.append(agent["agent"][node2Index].id)
                     agent["agent"][node1Index].connectionWeights.append(random.uniform(-1, 1))
                     agent["agent"][node2Index].parents.append(agent["agent"][node1Index].id)
-                    print(node1Index, agent["agent"][node1Index].children)
-                    print(node2Index, agent["agent"][node2Index].parents)
                 except:...
                 
             case 2: # New Node
-                print("New Node")
+                #print("New Node")
                 unusableNodes = []
-                
-                while len(unusableNodes) != len(agent["agent"]):
+                tries = 0
+                while len(unusableNodes) != len(agent["agent"]) and tries < 100:
+                    tries += 1
                 
                     randomNode1Index = random.randint(0, len(agent["agent"])-2) # -2 to avoid output node
                     
@@ -166,7 +206,9 @@ def mutateAgents(agentsToMutate):
                     randomNode1ID = getIDFromIndex(agent["agent"], randomNode1Index)
                     newNodeID = len(agent["agent"])
                     
-                    #if # check if nodes are connected
+                    # check if nodes are connected
+                    if randomNode1ID not in agent["agent"][randomNode2Index].parents:
+                        continue
                     
                     # Break the old connection
                     print(randomNode1Index, agent["agent"][randomNode1Index].children)
@@ -185,10 +227,12 @@ def mutateAgents(agentsToMutate):
                     break
                 
             case 3: # Weight Modification
-                print("Weight Modification")
+                #print("Weight Modification")
                 unusableNodes = []
+                tries = 0
                 
-                while len(unusableNodes) != len(agent["agent"]):
+                while len(unusableNodes) != len(agent["agent"]) and tries < 100:
+                    tries += 1
                     
                     randomNodeIndex = random.randint(0, len(agent["agent"])-2) # -2 to avoid output node
                     
@@ -200,7 +244,7 @@ def mutateAgents(agentsToMutate):
                 
                     agent["agent"][randomNodeIndex].connectionWeights[randomWeightIndex] = random.uniform(-1, 1)
                     break
-                print("weight modified")
+                #print("weight modified")
         
         """print("post mutation agent:", agentIndex)
         printNodesInfo(agent["agent"])
@@ -214,8 +258,8 @@ nodes.append(node(4, [], [], type="output"))
 
 nodes = sortNodes(nodes)
 
-generation = [{"agent" : nodes,
-               "fitness":0} for i in range(1000)]
+generation = [copy.deepcopy({"agent" : nodes,
+               "fitness":0}) for i in range(1000)]
 generationLength = 10000 # in frames of environment
 
 nextGeneration = []

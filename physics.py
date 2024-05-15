@@ -115,18 +115,18 @@ environment = {
     "balls": balls,
     "links": links,
     "solver": solverVariable,
-    "extraForce": extraForce
+    "extraForce": extraForce,
+    "frames": 0
 }
 
-environments = [environment for i in range(10)]
+environments = [environment for i in range(1000)]
 
 previousTime = 0
 startTime = time.time()
 deltaTime = 0
 
-j=0
 def main(environment):
-    global previousTime, startTime, deltaTime, j
+    global previousTime, startTime, deltaTime
     
     if previousTime == 0:
         previousTime = time.time()
@@ -134,7 +134,7 @@ def main(environment):
     previousTime = time.time()
     
     if deltaTime != 0:
-        j+=1
+        environment["frames"]+=1
         for i in range(subSteps):
             environment["solver"].update(environment["links"], environment["balls"], deltaTime/subSteps)
         
