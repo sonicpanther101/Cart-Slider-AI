@@ -1,4 +1,4 @@
-import pygame
+#import pygame
 import physics
 import neural_network as nn
 import random
@@ -107,12 +107,13 @@ def main():
             
             if physics.environments[0]["frames"]/nn.generationLength != 1:
                 # Open a file for writing in binary mode
-                with open(f'generation{int(physics.environments[0]["frames"]/nn.generationLength)}.txt', 'wb') as file:
+                with open(f'generation.txt', 'wb') as file:#{int(physics.environments[0]["frames"]/nn.generationLength)}.txt', 'wb') as file:
                     # Pickle the list and write it to the file
                     pickle.dump(nn.generation, file)
             
             print(f"fitness: {(nn.generation[0]["fitness"]/100000)*100:.2f}%")
-            nn.printNodesInfo(nn.generation[random.randint(0,len(nn.generation)-1)]["agent"])
+            print("most recent mutation:", nn.generation[0]["most recent mutation"])
+            nn.printNodesInfo(nn.generation[0]["agent"])
             
             nn.nextGeneration = copy.deepcopy(nn.generation[:int(len(nn.generation) * 0.3)])
             
@@ -122,10 +123,22 @@ def main():
             
             nn.nextGeneration.extend(mutatedAgents)
             
-            nn.generation = copy.deepcopy(nn.nextGeneration)
+            """for agent in nn.nextGeneration:
+                print(agent["agent"][-1].id, agent["agent"][-1].parents)"""
+                                        
+            for i in range(len(nn.generation)):
+                nn.generation[i] = nn.nextGeneration[i]
+            
+            """for i, agent in enumerate(nn.generation):
+                if any(any(node.parents) in node.children for node in agent["agent"]):
+                    print("ERROR: CYCLE DETECTED IN AGENT", i)
+                    print(agent["most recent mutation"])
+                    nn.printNodesInfo(agent["agent"])"""
             
             for agent in nn.generation:
                 agent["agent"] = nn.sortNodes(agent["agent"])
+                agent["fitness"] = 0
+                print(agent["agent"][-1].id, agent["agent"][-1].parents)
 
         # Update Screen
         #                       updateFrame(screen,centreCoord, font)
