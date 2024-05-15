@@ -120,7 +120,7 @@ def stepForwardOneFrame(environments, offset):
         if environment["frames"] % 100 == 0:
             pass#(f'agent {agentID}\ny of pendulum: {physics.environment["balls"][1].position[1]}\noutput: {output}')
         
-        environment["extraForce"] = output
+        environment["cartVelocity"] = output
         
         # update fitness
         

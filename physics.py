@@ -44,17 +44,18 @@ class ball:
         self.color = color
         self.id = id
 
-    def updatePosition(self, deltaTime, cart):
+    def updatePosition(self, deltaTime, cart, cartVelocity):
         velocity = self.position - self.oldPosition
         self.oldPosition = self.position[:]
-        self.position = self.position + velocity + self.acceleration * deltaTime * deltaTime
         if self.id == 0:
+            self.position = self.position + cartVelocity * deltaTime
             if -250 > self.position[0]:
                 self.position[0] = -250
             elif self.position[0] > 250:
                 self.position[0] = 250
         self.acceleration = self.acceleration * 0
         if self.id != 0:
+            self.position = self.position + velocity + self.acceleration * deltaTime * deltaTime
             linearVelocity = velocity / deltaTime
             theta = (math.pi-calculateAngle(self.position-cart.position))-(math.pi-calculateAngle(linearVelocity))
             velocityTangential = math.sin(theta) * norm(linearVelocity)
@@ -67,21 +68,18 @@ class solver:
     def __init__(self, gravity):
         self.gravity = np.array(gravity)
 
-    def update(self, links, balls, deltaTime):
+    def update(self, links, balls, deltaTime, cartVelocity):
         self.applyGravity(balls)
         self.solveLinks(links)
-        self.updatePositions(balls, deltaTime)
+        self.updatePositions(balls, deltaTime, cartVelocity)
 
-    def updatePositions(self, balls, deltaTime):
+    def updatePositions(self, balls, deltaTime, cartVelocity):
         for ball in balls:
-            ball.updatePosition(deltaTime, balls[0])
+            ball.updatePosition(deltaTime, balls[0], cartVelocity)
 
     def applyGravity(self, balls):
         for ball in balls:
-            if ball.id != 0:
-                ball.accelerate(self.gravity)
-            else:
-                ball.accelerate([extraForce, 0])
+            ball.accelerate(self.gravity)
 
     def solveLinks(self, links):
         for link in links:
@@ -109,13 +107,13 @@ subSteps = 1
 balls = [ball(50, [0, -10*i], [0, 0], [0, 0], (255, 255*i, 255*i), i)for i in range(2)]
 links = [link(balls[0], balls[1], 100, 5, (255, 255, 255))]
 solverVariable = solver([0, -100])
-extraForce = 0
+cartVelocity = 0
 
 environment = {
     "balls": balls,
     "links": links,
     "solver": solverVariable,
-    "extraForce": extraForce,
+    "cartVelocity": cartVelocity,
     "frames": 0
 }
 
@@ -136,9 +134,4 @@ def main(environment):
     if deltaTime != 0:
         environment["frames"]+=1
         for i in range(subSteps):
-            environment["solver"].update(environment["links"], environment["balls"], deltaTime/subSteps)
-        
-if __name__ == "__main__":
-    #while True:
-        #main()
-    pass
+            environment["solver"].update(environment["links"], environment["balls"], deltaTime/subSteps, environment["cartVelocity"])
