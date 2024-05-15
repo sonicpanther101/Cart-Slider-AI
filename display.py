@@ -1,4 +1,4 @@
-#import pygame
+import pygame
 import physics
 import neural_network as nn
 import random
