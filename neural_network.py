@@ -104,6 +104,7 @@ def stepForwardOneFrame(environments, offset):
         xDirection = physics.environment["balls"][0].position[0] - physics.environment["balls"][1].position[0]
         yDirection = physics.environment["balls"][0].position[1] - physics.environment["balls"][1].position[1]
         angularVelocity = physics.environment["balls"][1].angularVelocity
+        exit()
         
         generation[agentID]["agent"][0].value = position
         generation[agentID]["agent"][1].value = xDirection

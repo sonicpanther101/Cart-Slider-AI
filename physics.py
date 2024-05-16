@@ -2,6 +2,7 @@ import numpy as np
 import time
 import random
 from cythonized import norm
+import copy
 
 import math
 
@@ -43,6 +44,7 @@ class ball:
         self.acceleration = np.array([float(acceleration[i]) for i in range(len(acceleration))])
         self.color = color
         self.id = id
+        self.angularVelocity = 0
 
     def updatePosition(self, deltaTime, cart, cartVelocity):
         velocity = self.position - self.oldPosition
@@ -54,7 +56,7 @@ class ball:
             elif self.position[0] > 250:
                 self.position[0] = 250
         self.acceleration = self.acceleration * 0
-        if self.id != 0:
+        if self.id == 1:
             self.position = self.position + velocity + self.acceleration * deltaTime * deltaTime
             linearVelocity = velocity / deltaTime
             theta = (math.pi-calculateAngle(self.position-cart.position))-(math.pi-calculateAngle(linearVelocity))
@@ -117,7 +119,7 @@ environment = {
     "frames": 0
 }
 
-environments = [environment for i in range(1000)]
+environments = [copy.deepcopy(environment) for i in range(1000)]
 
 previousTime = 0
 startTime = time.time()
