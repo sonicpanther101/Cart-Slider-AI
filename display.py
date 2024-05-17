@@ -1,107 +1,69 @@
-#import pygame
-import physics
 import neural_network as nn
 import random
 import pickle
 import copy
 import time
 import threading
-
-def drawObjects(screen, centreCoord):
-    
-    for link in physics.links:
-        
-        coordinate1 = (link.ball1.position[0] + centreCoord[0], centreCoord[1] - link.ball1.position[1])
-        coordinate2 = (link.ball2.position[0] + centreCoord[0], centreCoord[1] - link.ball2.position[1])
-        thickness = link.thickness
-        colour = link.colour
-        
-        pygame.draw.line(screen, colour, coordinate1, coordinate2, width=thickness)
-        
-    for ball in physics.balls:
-        if ball.id == 0:
-            
-            width, height = ball.size, ball.size
-            left, top = ball.position[0] + centreCoord[0] - width / 2, centreCoord[1] - ball.position[1] - height / 2
-            colour = ball.color
-            
-            pygame.draw.rect(screen, colour, (left, top, width, height))
-
-i = 0
-fps = 0
-ballCount = 0
-def updateFrame(screen, centreCoord, font):
-    global i, fps, ballCount
-    i+=1
-
-    screen.fill((0, 0, 0))
-    
-    drawObjects(screen,centreCoord)
-    
-    if i % 50 == 0:
-        fps = int(1/physics.deltaTime if physics.deltaTime != 0 else fps)
-    textSurface1 = font.render("FPS:" + str(fps), False, (255, 255, 255))
-    screen.blit(textSurface1, (0,0))
-    
-    pygame.display.flip()
-
-
-keyboard = {}
-
-def get_key(key):
-    try:
-        return keyboard[key]
-    except KeyError:
-        return False
+import queue
 
 previousTime = 0
 startTime = time.time()
 deltaTime = 0
 threadsToUse = 10
+step = int(len(nn.generation)/threadsToUse)
+resultQueue = queue.Queue()
+
+def threadedUpdateEnv(generation):
+    global threadsToUse, step, resultQueue
+    threads = []
+        
+    for i in range(threadsToUse):
+        
+        startIndex = step * i
+        end = step * (i + 1)
+        subGeneration = generation[startIndex:end]
+        
+        thread = threading.Thread(target=nn.stepForwardOneFrame, args=(subGeneration, startIndex, resultQueue))
+        
+        threads.append(thread)
+        thread.start()
+        
+    results = []
+    for thread in threads:
+        thread.join()
+    
+    while not resultQueue.empty():
+        results.append(resultQueue.get())
+        
+    generation = []
+    for subList in results:
+        generation.extend(subList)
+        
+    return generation
 
 def main():
-    
-    """pygame.init()
-
-    screen = pygame.display.set_mode((860, 640), pygame.RESIZABLE)
-    
-    pygame.font.init()
-    font = pygame.font.SysFont('Comic Sans MS', 30)
-    
-    drawObjects(screen, (screen.get_width()/2, screen.get_height()/2))
-
-    pygame.display.flip()"""
 
     while True:
         
         global previousTime, startTime, deltaTime
-
-        #               centreCoord = (screen.get_width()/2, screen.get_height()/2)
         
         # Update Objects
         
-        threads = []
-        step = int(len(physics.environments)/threadsToUse)
+        nn.generation = threadedUpdateEnv(nn.generation)
+            
+        print(nn.generation[0]["frames alive"])
         
-        for i in range(threadsToUse):
-            threads.append(threading.Thread(target=nn.stepForwardOneFrame, args=(physics.environments[step*i:step*(i+1)], step*i)))
-            threads[-1].start()
-            
-        for thread in threads:
-            thread.join()
-            
-        print(physics.environments[0]["frames"])
-        # Reset Objects for new generation
+        # Reset everything for new generation
 
-        if physics.environments[0]["frames"] % nn.generationLength == 0:
+        if nn.generation[0]["frames alive"] % nn.generationLength == 0:
             
             deltaTime = time.time() - previousTime
             previousTime = time.time()
             
-            if physics.environments[0]["frames"]/nn.generationLength == 5:
+            if nn.generation[0]["frames alive"]/nn.generationLength == 5:
                 exit()
             
-            print(f'Generation {physics.environments[0]["frames"]/nn.generationLength:.0f}')
+            print(f'Generation {nn.generation[0]["frames alive"]/nn.generationLength:.0f}')
             print(f"generation took {(deltaTime):.2f} seconds")
             
             nn.generation = nn.sortGenerationByFitness(nn.generation)
@@ -110,11 +72,11 @@ def main():
             print("most recent mutation:", nn.generation[0]["most recent mutation"])
             nn.printNodesInfo(nn.generation[0]["agent"])
             
-            if physics.environments[0]["frames"]/nn.generationLength != 1:
+            if nn.generation[0]["frames alive"]/nn.generationLength != 1:
                 # Open a file for writing in binary mode
-                with open(f'generation.txt', 'wb') as file:#{int(physics.environments[0]["frames"]/nn.generationLength)}.txt', 'wb') as file:
+                with open(f'generation.txt', 'wb') as file:#{int(nn.generation[0]["frames alive"]/nn.generationLength)}.txt', 'wb') as file:
                     # Pickle the list and write it to the file
-                    pickle.dump(nn.generation, file)
+                    pickle.dump(nn.generation[0], file)
             
             nn.nextGeneration = copy.deepcopy(nn.generation[:int(len(nn.generation) * 0.3)])
             
@@ -139,18 +101,6 @@ def main():
                 agent["agent"] = nn.sortNodes(agent["agent"])
                 print(agent["agent"][-1].id, agent["agent"][-1].parents)
                 agent["fitness"] = 0
-
-        # Update Screen
-        #                       updateFrame(screen,centreCoord, font)
-        
-        # Check if user has quit
-        """for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-            elif event.type == pygame.KEYDOWN:
-                keyboard[event.key] = True
-            elif event.type == pygame.KEYUP:
-                keyboard[event.key] = False"""
                 
 if __name__ == "__main__":
     main()

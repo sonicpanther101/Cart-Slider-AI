@@ -1,1 +1,7 @@
-print(27**(1/3))
+x = 10
+y = 20
+z = 'hello'
+
+del x, y
+
+print(z)

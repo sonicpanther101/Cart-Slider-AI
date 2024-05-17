@@ -5,7 +5,7 @@ import physics
 class node:
     def __init__(self, id, type="hidden"):
         self.id = id
-        self.bias = random.uniform(-1, 1) # not sure on this one
+        #self.bias = random.uniform(-1, 1) # not sure on this one
         self.parents = []
         self.children = []
         self.connectionWeights = []  # This will be initialized separately based on children
@@ -13,7 +13,7 @@ class node:
         self.type = type
     
     def calculate(self, nodes):
-        self.value += self.bias
+        #self.value += self.bias
         
         if len(self.children) == 0:
             self.value = tanh(self.value)
@@ -91,45 +91,48 @@ def resetNodes(nodes):
         node.value = 0
     return nodes
 
-def stepForwardOneFrame(environments, offset):
-    for agentID, environment in enumerate(environments):
-        global generation
+def stepForwardOneFrame(subGeneration, offset, resultQueue):
+    for agentID, agent in enumerate(subGeneration):
         agentID += offset
         
         # Update Physics frame
                 
-        physics.main(environment)
+        physics.main(agent["environment"])
         
         # get NN output
         
-        position = physics.environment["balls"][0].position[0]
-        xDirection = physics.environment["balls"][0].position[0] - physics.environment["balls"][1].position[0]
-        yDirection = physics.environment["balls"][0].position[1] - physics.environment["balls"][1].position[1]
-        angularVelocity = physics.environment["balls"][1].angularVelocity
+        position = agent["environment"]["balls"][0].position[0]
+        xDirection = agent["environment"]["balls"][0].position[0] - agent["environment"]["balls"][1].position[0]
+        yDirection = agent["environment"]["balls"][0].position[1] - agent["environment"]["balls"][1].position[1]
+        angularVelocity = agent["environment"]["balls"][1].angularVelocity
         
         
-        generation[agentID]["agent"][0].value = position
-        generation[agentID]["agent"][1].value = xDirection
-        generation[agentID]["agent"][2].value = yDirection
-        generation[agentID]["agent"][3].value = angularVelocity
+        agent["brain"][0].value = position
+        agent["brain"][1].value = xDirection
+        agent["brain"][2].value = yDirection
+        agent["brain"][3].value = angularVelocity
         
-        generation[agentID]["agent"] = calculateNodes(generation[agentID]["agent"])
+        agent["brain"] = calculateNodes(agent["brain"])
         
-        output = generation[agentID]["agent"][-1].value
+        output = agent["brain"][-1].value
         
-        generation[agentID]["agent"] = resetNodes(generation[agentID]["agent"])
+        agent["brain"] = resetNodes(agent["brain"])
         
-        if environment["frames"] % 100 == 0:
-            pass#(f'agent {agentID}\ny of pendulum: {physics.environment["balls"][1].position[1]}\noutput: {output}')
+        if agent["frames alive"] % 100 == 0:
+            pass#(f'agent {agentID}\ny of pendulum: {agent["environment"]["balls"][1].position[1]}\noutput: {output}')
         
-        environment["cartVelocity"] = np.array([output,0])
+        agent["environment"]["cartVelocity"] = np.array([output,0])
         
         # update fitness
         
-        generation[agentID]["fitness"] += fitness(physics.environment["balls"][1].position[1])
+        agent["fitness"] += fitness(agent["environment"]["balls"][1].position[1])
+        
+        agent["frames alive"] += 1
+        
+        resultQueue.put(subGeneration)
 
 def sortGenerationByFitness(generation):
-    return sorted(generation, key=lambda x: x["fitness"], reverse=True)
+    return sorted(generation, key=lambda agent: agent["fitness"], reverse=True)
 
 def getIndexFromID(nodes, id):
     for i, node in enumerate(nodes):
@@ -207,8 +210,6 @@ def mutateAgents(agentsToMutate):
                     if len(agent["agent"][randomNode1Index].children) == 0:
                         unusableNodes.append(randomNode1Index)
                         continue
-                    #else:
-                        #print(agent["agent"][randomNode1Index].id, agent["agent"][randomNode1Index].children)
                     
                     randomNode2ID = random.choice(agent["agent"][randomNode1Index].children)
                     randomNode2Index = getIndexFromID(agent["agent"], randomNode2ID)
@@ -273,9 +274,11 @@ nodes.append(node(4, type="output"))
 
 nodes = sortNodes(nodes)
 
-generation = [{"agent" : copy.deepcopy(nodes),
+generation = [{"brain" : copy.deepcopy(nodes),
+               "environment":copy.deepcopy(physics.environment),
                "fitness":0,
-               "most recent mutation":0} for i in range(100)]
+               "frames alive": 0,
+               "most recent mutation":0} for i in range(10)]
 generationLength = 100 # in frames of environment 100 fps for 100s so 10000
 
 nextGeneration = []
