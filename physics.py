@@ -119,7 +119,7 @@ environment = {
     "frames": 0
 }
 
-environments = [copy.deepcopy(environment) for i in range(1000)]
+environments = [copy.deepcopy(environment) for i in range(100)]
 
 previousTime = 0
 startTime = time.time()

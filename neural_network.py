@@ -33,16 +33,18 @@ def tanh(x):
 
 def sortNodes(nodes):
     
+    tempNodes = copy.deepcopy(nodes)
+    
     sortedNodes = []
     
     #print("started sorting")
-    while len(nodes) > 0:
+    while len(tempNodes) > 0:
         nodesToProcess = []
         
-        for node in nodes:
+        for i, node in enumerate(tempNodes):
             if len(node.parents) == 0:
-                nodesToProcess.append(node)
-                nodes = removeNode(nodes, getIndexFromID(nodes, node.id))
+                nodesToProcess.append(nodes[i])
+                tempNodes = removeNode(tempNodes, getIndexFromID(tempNodes, node.id))
         
         for node in nodesToProcess:
             sortedNodes.append(node)
@@ -104,7 +106,7 @@ def stepForwardOneFrame(environments, offset):
         xDirection = physics.environment["balls"][0].position[0] - physics.environment["balls"][1].position[0]
         yDirection = physics.environment["balls"][0].position[1] - physics.environment["balls"][1].position[1]
         angularVelocity = physics.environment["balls"][1].angularVelocity
-        exit()
+        
         
         generation[agentID]["agent"][0].value = position
         generation[agentID]["agent"][1].value = xDirection
@@ -271,9 +273,9 @@ nodes.append(node(4, type="output"))
 
 nodes = sortNodes(nodes)
 
-generation = [{"agent" : nodes,
+generation = [{"agent" : copy.deepcopy(nodes),
                "fitness":0,
-               "most recent mutation":0} for i in range(1000)]
-generationLength = 10000 # in frames of environment
+               "most recent mutation":0} for i in range(100)]
+generationLength = 100 # in frames of environment 100 fps for 100s so 10000
 
 nextGeneration = []

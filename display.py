@@ -89,7 +89,8 @@ def main():
             
         for thread in threads:
             thread.join()
-        
+            
+        print(physics.environments[0]["frames"])
         # Reset Objects for new generation
 
         if physics.environments[0]["frames"] % nn.generationLength == 0:
@@ -117,16 +118,16 @@ def main():
             
             nn.nextGeneration = copy.deepcopy(nn.generation[:int(len(nn.generation) * 0.3)])
             
-            agentsToMutate = random.choices(copy.deepcopy(nn.generation), weights=[agent["fitness"] for agent in nn.generation],k= int(len(nn.generation) * 0.7))
+            agentsToMutate = random.choices(copy.deepcopy(nn.generation), weights=[agent["fitness"] if agent["fitness"] > 1 else 1 for agent in nn.generation],k= int(len(nn.generation) * 0.7))
             
             mutatedAgents = nn.mutateAgents(agentsToMutate)
             
             nn.nextGeneration.extend(mutatedAgents)
-            
-            for agent in nn.nextGeneration:
-                print(agent["agent"][-1].id, agent["agent"][-1].parents)
                                         
-            nn.generation[i] = copy.deepcopy(nn.nextGeneration[i])
+            nn.generation = copy.deepcopy(nn.nextGeneration)
+            
+            """for agent in nn.generation:
+                print(agent["agent"][-1].id, agent["agent"][-1].parents)"""
             
             """for i, agent in enumerate(nn.generation):
                 if any(any(node.parents) in node.children for node in agent["agent"]):
@@ -136,8 +137,8 @@ def main():
             
             for agent in nn.generation:
                 agent["agent"] = nn.sortNodes(agent["agent"])
+                print(agent["agent"][-1].id, agent["agent"][-1].parents)
                 agent["fitness"] = 0
-                #print(agent["agent"][-1].id, agent["agent"][-1].parents)
 
         # Update Screen
         #                       updateFrame(screen,centreCoord, font)
