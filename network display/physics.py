@@ -1,10 +1,8 @@
 import numpy as np
 import time
-import random
 from cythonized import norm
-import copy
-
 import math
+import neural_network
 
 def calculateAngle(coord):
     """
@@ -36,32 +34,21 @@ def calculateAngle(coord):
     return angle
 
 class ball:
-    def __init__(self, size, position, velocity, acceleration, color, id):
+    def __init__(self, size, position, velocity, acceleration, colour, id):
         
         self.size = size
         self.position = np.array([float(position[i]) for i in range(len(position))])
         self.oldPosition = np.array(self.position) - np.array(velocity) * (1/1000)
         self.acceleration = np.array([float(acceleration[i]) for i in range(len(acceleration))])
-        self.color = color
+        self.colour = colour
         self.id = id
         self.angularVelocity = 0
 
-    def updatePosition(self, deltaTime, cart, cartVelocity):
-        velocity = self.position - self.oldPosition
-        self.oldPosition = self.position[:]
-        if self.id == 0:
-            self.position = self.position + cartVelocity * deltaTime
-            if -250 > self.position[0]:
-                self.position[0] = -250
-            elif self.position[0] > 250:
-                self.position[0] = 250
-        self.acceleration = self.acceleration * 0
-        if self.id == 1:
+    def updatePosition(self, deltaTime):
+        if self.id not in unmovingBallIDs:
+            velocity = self.position - self.oldPosition
+            self.oldPosition = self.position[:]
             self.position = self.position + velocity + self.acceleration * deltaTime * deltaTime
-            linearVelocity = velocity / deltaTime
-            theta = (math.pi-calculateAngle(self.position-cart.position))-(math.pi-calculateAngle(linearVelocity))
-            velocityTangential = math.sin(theta) * norm(linearVelocity)
-            self.angularVelocity = velocityTangential / norm(self.position-cart.position)
 
     def accelerate(self, acc):
         self.acceleration = self.acceleration + acc
@@ -70,14 +57,14 @@ class solver:
     def __init__(self, gravity):
         self.gravity = np.array(gravity)
 
-    def update(self, links, balls, deltaTime, cartVelocity):
+    def update(self, links, balls, deltaTime):
         self.applyGravity(balls)
         self.solveLinks(links)
-        self.updatePositions(balls, deltaTime, cartVelocity)
+        self.updatePositions(balls, deltaTime)
 
-    def updatePositions(self, balls, deltaTime, cartVelocity):
+    def updatePositions(self, balls, deltaTime):
         for ball in balls:
-            ball.updatePosition(deltaTime, balls[0], cartVelocity)
+            ball.updatePosition(deltaTime)
 
     def applyGravity(self, balls):
         for ball in balls:
@@ -101,36 +88,56 @@ class link:
         normal = axis / distance
         delta = self.targetDistance - distance
 
-        # uncomment to have stick momentum to pull cart
-        self.ball2.position = self.ball2.position - (normal * delta) #/ 2)
-        #self.ball1.position = self.ball1.position + (normal * delta / 2) * np.array([1, 0])
+        if self.ball2.id not in unmovingBallIDs:
+            self.ball2.position = self.ball2.position - (normal * delta/ 2)
+        if self.ball1.id not in unmovingBallIDs:
+            self.ball1.position = self.ball1.position + (normal * delta / 2)
 
 subSteps = 1
-balls = [ball(50, [0, -100*i], [0, 0], [0, 0], (255, 255*i, 255*i), i)for i in range(2)]
-links = [link(balls[0], balls[1], 100, 5, (255, 255, 255))]
-solverVariable = solver([0, -100])
-cartVelocity = 0
+balls = []
+links = []
+solverVariable = solver([0, 0])
+unmovingBallIDs = []
 
-environment = {
-    "balls": balls,
-    "links": links,
-    "solver": solverVariable,
-    "cartVelocity": cartVelocity
-}
+with open('C:/Users/Adam/My Drive/Programming/ai/cart slider proper attempt/Cart-Slider-AI-2/test.pickle', 'rb') as file:
+    
+    print(neural_network.pickle.load(file))
+    nn = neural_network.pickle.load(file)
+
+neural_network.printNodesInfo(nn)
+
+# get number of input/output nodes
+inputNodes = len([node for node in nn if node.type == "input"])
+outputNodes = len([node for node in nn if node.type == "output"])
+
+inputNodeSeperation = 300 / inputNodes
+outputNodeSeperation = 300 / outputNodes
+
+inputNodesAdded = 0
+outputNodesAdded = 0
+
+for node in nn:
+    match node.type:
+        case "input":
+            balls.append(ball(13, [-400,300 - inputNodeSeperation * inputNodesAdded], [0,0], [0,0], (255, 0, 0), node.id))
+        case "output":
+            balls.append(ball(13, [400,300 - outputNodeSeperation * outputNodesAdded], [0,0], [0,0], (0, 0, 255), node.id))
+        case "hidden":
+            balls.append(ball(10, [0,0], [0,0], [0,0], (0, 255, 0), node.id))
 
 previousTime = 0
 startTime = time.time()
 deltaTime = 0
 
-def main(environment):
+def main():
     global previousTime, startTime, deltaTime
     
     if previousTime == 0:
         previousTime = time.time()
-    deltaTime = 1/100#time.time() - previousTime
+    deltaTime = time.time() - previousTime
     previousTime = time.time()
     
     if deltaTime != 0:
 
         for i in range(subSteps):
-            environment["solver"].update(environment["links"], environment["balls"], deltaTime/subSteps, environment["cartVelocity"])
+            solverVariable.update(links, balls, deltaTime/subSteps)

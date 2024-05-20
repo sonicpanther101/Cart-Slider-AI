@@ -100,10 +100,8 @@ def main():
             
             for agent in nn.generation:
                 agent["brain"] = nn.sortNodes(agent["brain"])
-                if agent["brain"][-1].parents != nn.nextGeneration[-1]["brain"][-1].parents:
-                    print(agent["brain"][-1].parents, nn.nextGeneration[-1]["brain"][-1].parents)
-                #print(agent["brain"][-1].id, agent["brain"][-1].parents)
                 agent["fitness"] = 0
+                agent["environment"] = copy.deepcopy(nn.physics.environment)
                 
 if __name__ == "__main__":
     main()

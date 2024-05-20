@@ -1,6 +1,5 @@
 import numpy as np
 import random, copy, math
-import physics
 import pickle
 
 class node:
@@ -19,25 +18,6 @@ class node:
                 self.colour = "red"
             case "hidden":
                 self.colour = "green"
-    
-    def calculate(self, nodes):
-        #self.value += self.bias
-        
-        if len(self.children) == 0:
-            self.value = tanh(self.value)
-        elif len(self.parents) > 0:
-            self.value = relu(self.value)
-        
-        for childID in self.children:
-            for childNode in nodes:
-                if childNode.id == childID:
-                    childNode.value += self.value * self.connectionWeights[self.children.index(childID)]
-
-def relu(x):
-	return max(0.0, x)
-
-def tanh(x):
-    return np.tanh(x)
 
 def sortNodes(nodes):
     
@@ -92,57 +72,6 @@ def printNodesOrder(nodes):
     
 def printNodeInfo(node):
     print(node.id, node.parents, node.children, node.connectionWeights, node.value, node.type)
-
-def calculateNodes(nodes):
-    for node in nodes:
-        node.calculate(nodes)
-    
-    return nodes
-
-def resetNodes(nodes):
-    for node in nodes:
-        node.value = 0
-    return nodes
-
-def stepForwardOneFrame(subGeneration, offset, resultQueue):
-    for agentID, agent in enumerate(subGeneration):
-        agentID += offset
-        
-        # Update Physics frame
-                
-        physics.main(agent["environment"])
-        
-        # get NN output
-        
-        position = agent["environment"]["balls"][0].position[0]
-        xDirection = agent["environment"]["balls"][0].position[0] - agent["environment"]["balls"][1].position[0]
-        yDirection = agent["environment"]["balls"][0].position[1] - agent["environment"]["balls"][1].position[1]
-        angularVelocity = agent["environment"]["balls"][1].angularVelocity
-        
-        
-        agent["brain"][0].value = position
-        agent["brain"][1].value = xDirection
-        agent["brain"][2].value = yDirection
-        agent["brain"][3].value = angularVelocity
-        
-        agent["brain"] = calculateNodes(agent["brain"])
-        
-        output = agent["brain"][-1].value
-        
-        agent["brain"] = resetNodes(agent["brain"])
-        
-        if agent["frames alive"] % 100 == 0:
-            pass#(f'agent {agentID}\ny of pendulum: {agent["environment"]["balls"][1].position[1]}\noutput: {output}')
-        
-        agent["environment"]["cartVelocity"] = np.array([output,0])
-        
-        # update fitness
-        
-        agent["fitness"] += fitness(agent["environment"]["balls"][1].position[1])
-        
-        agent["frames alive"] += 1
-        
-        resultQueue.put(subGeneration)
 
 def sortGenerationByFitness(generation):
     return sorted(generation, key=lambda agent: agent["fitness"], reverse=True)
@@ -281,36 +210,3 @@ def mutateAgents(agentsToMutate):
         mutatedAgents.append(agent)
     
     return mutatedAgents
-
-nodes = [node(i, type="input") for i in range(4)]
-nodes.append(node(4, type="output"))
-
-nodes = sortNodes(nodes)
-
-generation = [{"brain" : copy.deepcopy(nodes),
-               "environment":copy.deepcopy(physics.environment),
-               "fitness":0,
-               "frames alive": 0,
-               "most recent mutation":0} for i in range(1)]
-generationLength = 100 # in frames of environment 100 fps for 100s so 10000
-
-nextGeneration = []
-
-if __name__ == "__main__":
-
-    printNodesInfo(generation[0]["brain"])
-    
-    for i in range(100):
-        generation = mutateAgents(generation)
-        
-        for agent in generation:
-            agent["brain"] = sortNodes(agent["brain"])
-        print(i)
-    
-    with open('C:/Users/Adam/My Drive/Programming/ai/cart slider proper attempt/Cart-Slider-AI-2/test.pickle', 'wb') as file:
-
-        print("dumping")
-        pickle.dump(generation[0]["brain"], file)
-        print("dumped")
-        
-    printNodesInfo(generation[0]["brain"])
