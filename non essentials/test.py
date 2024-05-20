@@ -1,7 +1,7 @@
-x = 10
-y = 20
-z = 'hello'
+a = 10
 
-del x, y
-
-print(z)
+def f(x):
+    a=3
+    
+f(1)
+print(a)

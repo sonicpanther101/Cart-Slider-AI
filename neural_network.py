@@ -34,21 +34,39 @@ def tanh(x):
 def sortNodes(nodes):
     
     tempNodes = copy.deepcopy(nodes)
+    tempNodesLength = len(tempNodes)
     
     sortedNodes = []
+    offset = 0
+    x = 0
     
     #print("started sorting")
-    while len(tempNodes) > 0:
+    while tempNodesLength > 0:
+        x+=1
+        print(f"round {x}")
         nodesToProcess = []
+        nodeIndexesToRemove = []
         
-        for i, node in enumerate(tempNodes):
-            if len(node.parents) == 0:
-                nodesToProcess.append(nodes[i])
-                tempNodes = removeNode(tempNodes, getIndexFromID(tempNodes, node.id))
+        for i in range(tempNodesLength):
+            if len(tempNodes[i].parents) == 0:
+                print(i+offset)
+                nodesToProcess.append(nodes[i+offset])
+                nodeIndexesToRemove.append(i)
+        
+        nodeIndexesToRemove.sort(reverse=True)
+        for nodeIndex in nodeIndexesToRemove:
+            tempNodes = removeNode(tempNodes, nodeIndex)
+            tempNodesLength -= 1
         
         for node in nodesToProcess:
+            offset += 1
             sortedNodes.append(node)
+            
     #print("finished sorting")
+    
+    printNodesInfo(nodes)
+    print("vs")
+    printNodesInfo(sortedNodes)
     
     return sortedNodes
 
@@ -150,7 +168,7 @@ def mutateAgents(agentsToMutate):
     
     for i in range(len(agentsToMutate)):
         """print("agent:", i)
-        printNodesInfo(agentsToMutate[i]["agent"]) 
+        printNodesInfo(agentsToMutate[i]["brain"]) 
         print("-"*30)"""
     
     mutatedAgents = []
@@ -158,12 +176,12 @@ def mutateAgents(agentsToMutate):
     for agentIndex, agentTemp in enumerate(agentsToMutate):
         agent = copy.deepcopy(agentTemp)
         """print("pre mutation agent:", agentIndex)
-        printNodesInfo(agent["agent"])
+        printNodesInfo(agent["brain"])
         print("-"*30)"""
         
         options = [0,1]
         
-        if any(len(agent["agent"][i].children) > 0 for i in range(len(agent["agent"]))):
+        if any(len(agent["brain"][i].children) > 0 for i in range(len(agent["brain"]))):
             options.append(2)
             options.append(3)
         
@@ -178,23 +196,23 @@ def mutateAgents(agentsToMutate):
                 while tries < 100:
                     tries += 1
 
-                    node1Index = random.randint(0,len(agent["agent"])-1)
-                    node2Index = random.randint(0,len(agent["agent"])-1)
+                    node1Index = random.randint(0,len(agent["brain"])-1)
+                    node2Index = random.randint(0,len(agent["brain"])-1)
                                         
                     if node1Index < node2Index and \
-((agent["agent"][node1Index].type == "input") + (agent["agent"][node2Index].type == "input") <=1 ) and \
-((agent["agent"][node1Index].type == "output") + (agent["agent"][node2Index].type == "output") <=1 ) and \
-(agent["agent"][node2Index].id not in agent["agent"][node1Index].children) and \
-(agent["agent"][node1Index].id not in agent["agent"][node2Index].parents):
+((agent["brain"][node1Index].type == "input") + (agent["brain"][node2Index].type == "input") <=1 ) and \
+((agent["brain"][node1Index].type == "output") + (agent["brain"][node2Index].type == "output") <=1 ) and \
+(agent["brain"][node2Index].id not in agent["brain"][node1Index].children) and \
+(agent["brain"][node1Index].id not in agent["brain"][node2Index].parents):
                         break
                     
                 try:
                     if tries != 100:
-                        agent["agent"][node1Index].children.append(agent["agent"][node2Index].id)
-                        agent["agent"][node1Index].connectionWeights.append(random.uniform(-1, 1))
-                        #print("pre:",agent["agent"][node2Index].id,agent["agent"][node2Index].parents)
-                        agent["agent"][node2Index].parents.append(agent["agent"][node1Index].id)
-                        #print(agent["agent"][node2Index].id,agent["agent"][node2Index].parents)
+                        agent["brain"][node1Index].children.append(agent["brain"][node2Index].id)
+                        agent["brain"][node1Index].connectionWeights.append(random.uniform(-1, 1))
+                        #print("pre:",agent["brain"][node2Index].id,agent["brain"][node2Index].parents)
+                        agent["brain"][node2Index].parents.append(agent["brain"][node1Index].id)
+                        #print(agent["brain"][node2Index].id,agent["brain"][node2Index].parents)
                         agent["most recent mutation"] = f"New Connection between nodes {getIDFromIndex(agent['agent'],node1Index)} and {getIDFromIndex(agent['agent'],node2Index)}"
                 except:...
 
@@ -202,41 +220,41 @@ def mutateAgents(agentsToMutate):
                 #print("New Node")
                 unusableNodes = []
                 tries = 0
-                while len(unusableNodes) != len(agent["agent"]) and tries < 100:
+                while len(unusableNodes) != len(agent["brain"]) and tries < 100:
                     tries += 1
                 
-                    randomNode1Index = random.randint(0, len(agent["agent"])-1) # -2 to avoid output node
+                    randomNode1Index = random.randint(0, len(agent["brain"])-1) # -2 to avoid output node
                     
-                    if len(agent["agent"][randomNode1Index].children) == 0:
+                    if len(agent["brain"][randomNode1Index].children) == 0:
                         unusableNodes.append(randomNode1Index)
                         continue
                     
-                    randomNode2ID = random.choice(agent["agent"][randomNode1Index].children)
-                    randomNode2Index = getIndexFromID(agent["agent"], randomNode2ID)
-                    randomNode1ID = getIDFromIndex(agent["agent"], randomNode1Index)
-                    newNodeID = len(agent["agent"])
-                    #print(randomNode2ID, agent["agent"][randomNode2Index].parents)
+                    randomNode2ID = random.choice(agent["brain"][randomNode1Index].children)
+                    randomNode2Index = getIndexFromID(agent["brain"], randomNode2ID)
+                    randomNode1ID = getIDFromIndex(agent["brain"], randomNode1Index)
+                    newNodeID = len(agent["brain"])
+                    #print(randomNode2ID, agent["brain"][randomNode2Index].parents)
                     
                     # check if nodes are connected
-                    if randomNode1ID not in agent["agent"][randomNode2Index].parents or randomNode2ID not in agent["agent"][randomNode1Index].children:
+                    if randomNode1ID not in agent["brain"][randomNode2Index].parents or randomNode2ID not in agent["brain"][randomNode1Index].children:
                         continue
                     
                     print("NEW NODE")
                     # Break the old connection
-                    print(randomNode1Index, agent["agent"][randomNode1Index].children)
-                    print(randomNode2Index, agent["agent"][randomNode2Index].parents)
-                    agent["agent"][randomNode1Index].children.remove(randomNode2ID)
-                    agent["agent"][randomNode2Index].parents.remove(randomNode1ID)
+                    print(randomNode1Index, agent["brain"][randomNode1Index].children)
+                    print(randomNode2Index, agent["brain"][randomNode2Index].parents)
+                    agent["brain"][randomNode1Index].children.remove(randomNode2ID)
+                    agent["brain"][randomNode2Index].parents.remove(randomNode1ID)
                     
                     # Add the new connection
-                    agent["agent"][randomNode1Index].children.append(newNodeID)
-                    agent["agent"][randomNode1Index].connectionWeights.append(random.uniform(-1, 1))
-                    agent["agent"][randomNode2Index].parents.append(newNodeID)
+                    agent["brain"][randomNode1Index].children.append(newNodeID)
+                    agent["brain"][randomNode1Index].connectionWeights.append(random.uniform(-1, 1))
+                    agent["brain"][randomNode2Index].parents.append(newNodeID)
                     
                     # Add the new node of the connection
-                    agent["agent"].append(node(newNodeID))
-                    agent["agent"][-1].parents.append(randomNode1ID)
-                    agent["agent"][-1].children.append(randomNode2ID)
+                    agent["brain"].append(node(newNodeID))
+                    agent["brain"][-1].parents.append(randomNode1ID)
+                    agent["brain"][-1].children.append(randomNode2ID)
                     agent["most recent mutation"] = f"New Node {newNodeID} between {randomNode1ID} and {randomNode2ID}"
                     
                     break
@@ -246,24 +264,24 @@ def mutateAgents(agentsToMutate):
                 unusableNodes = []
                 tries = 0
                 
-                while len(unusableNodes) != len(agent["agent"]) and tries < 100:
+                while len(unusableNodes) != len(agent["brain"]) and tries < 100:
                     tries += 1
                     
-                    randomNodeIndex = random.randint(0, len(agent["agent"])-2) # -2 to avoid output node
+                    randomNodeIndex = random.randint(0, len(agent["brain"])-2) # -2 to avoid output node
                     
-                    if len(agent["agent"][randomNodeIndex].connectionWeights) == 0:
+                    if len(agent["brain"][randomNodeIndex].connectionWeights) == 0:
                         unusableNodes.append(randomNodeIndex)
                         continue
                     
-                    randomWeightIndex = random.randint(0, len(agent["agent"][randomNodeIndex].connectionWeights)-1)
+                    randomWeightIndex = random.randint(0, len(agent["brain"][randomNodeIndex].connectionWeights)-1)
                 
-                    agent["agent"][randomNodeIndex].connectionWeights[randomWeightIndex] = random.uniform(-1, 1)
-                    agent["most recent mutation"] = f"Weight Modification of node {getIDFromIndex(agent["agent"],randomNodeIndex)} connection {getIDFromIndex(agent["agent"],randomWeightIndex)}"
+                    agent["brain"][randomNodeIndex].connectionWeights[randomWeightIndex] = random.uniform(-1, 1)
+                    agent["most recent mutation"] = f"Weight Modification of node {getIDFromIndex(agent["brain"],randomNodeIndex)} connection {getIDFromIndex(agent["brain"],randomWeightIndex)}"
                     break
                 #print("weight modified")
         
         """print("post mutation agent:", agentIndex)
-        printNodesInfo(agent["agent"])
+        printNodesInfo(agent["brain"])
         print("-"*30)"""
         mutatedAgents.append(agent)
     
@@ -271,6 +289,11 @@ def mutateAgents(agentsToMutate):
 
 nodes = [node(i, type="input") for i in range(4)]
 nodes.append(node(4, type="output"))
+nodes[4].parents.append(5)
+nodes[0].children.append(5)
+nodes.append(node(5))
+nodes[5].parents.append(0)
+nodes[5].children.append(4)
 
 nodes = sortNodes(nodes)
 
