@@ -2,7 +2,8 @@ import numpy as np
 import time
 from cythonized import norm
 import math
-import neural_network
+from neural_network import node, printNodesInfo, getIndexFromID
+import pickle
 
 def calculateAngle(coord):
     """
@@ -99,31 +100,40 @@ links = []
 solverVariable = solver([0, 0])
 unmovingBallIDs = []
 
-with open('C:/Users/Adam/My Drive/Programming/ai/cart slider proper attempt/Cart-Slider-AI-2/test.pickle', 'rb') as file:
+with open('C:/Google_Drive/Programming/ai/cart slider proper attempt/Cart-Slider-AI/test.pickle', 'rb') as file:
     
-    print(neural_network.pickle.load(file))
-    nn = neural_network.pickle.load(file)
+    #print(pickle.load(file))
+    nn = pickle.load(file)
 
-neural_network.printNodesInfo(nn)
+#printNodesInfo(nn)
 
 # get number of input/output nodes
-inputNodes = len([node for node in nn if node.type == "input"])
-outputNodes = len([node for node in nn if node.type == "output"])
+inputNodes = len([node for node in nn if node.type == "input"]) - 1
+outputNodes = len([node for node in nn if node.type == "output"]) - 1
 
-inputNodeSeperation = 300 / inputNodes
-outputNodeSeperation = 300 / outputNodes
+inputNodeSeperation = 600 / inputNodes if inputNodes > 0 else 0
+outputNodeSeperation = 600 / outputNodes if outputNodes > 0 else 300
 
 inputNodesAdded = 0
-outputNodesAdded = 0
+outputNodesAdded = 1
 
 for node in nn:
     match node.type:
         case "input":
             balls.append(ball(13, [-400,300 - inputNodeSeperation * inputNodesAdded], [0,0], [0,0], (255, 0, 0), node.id))
+            unmovingBallIDs.append(node.id)
+            inputNodesAdded += 1
         case "output":
             balls.append(ball(13, [400,300 - outputNodeSeperation * outputNodesAdded], [0,0], [0,0], (0, 0, 255), node.id))
+            unmovingBallIDs.append(node.id)
+            outputNodesAdded += 1
         case "hidden":
             balls.append(ball(10, [0,0], [0,0], [0,0], (0, 255, 0), node.id))
+
+for node in nn:
+    
+    for childID in node.children:
+        links.append(link(balls[getIndexFromID(balls, node.id)], balls[getIndexFromID(balls, childID)], 0, 2, (255, 255, 0)))
 
 previousTime = 0
 startTime = time.time()

@@ -1,4 +1,5 @@
 import pygame
+from neural_network import node, printNodesInfo
 import physics
 import math
 import numpy as np
