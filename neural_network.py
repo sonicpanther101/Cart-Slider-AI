@@ -291,8 +291,8 @@ generation = [{"brain" : copy.deepcopy(nodes),
                "environment":copy.deepcopy(physics.environment),
                "fitness":0,
                "frames alive": 0,
-               "most recent mutation":0} for i in range(1)]
-generationLength = 100 # in frames of environment 100 fps for 100s so 10000
+               "most recent mutation":0} for i in range(100)]
+generationLength = 1000 # in frames of environment 100 fps for 100s so 10000
 
 nextGeneration = []
 
@@ -307,10 +307,21 @@ if __name__ == "__main__":
             agent["brain"] = sortNodes(agent["brain"])
         print(i)
     
-    with open('C:/Users/Adam/My Drive/Programming/ai/cart slider proper attempt/Cart-Slider-AI-2/test.pickle', 'wb') as file:
+    with open('C:/Google_Drive/Programming/ai/cart slider proper attempt/Cart-Slider-AI/test.pickle', 'wb') as file:
 
+        test = copy.deepcopy(generation[0]["brain"])
+        from neural_network import node
+        network = [node(i) for i in range(len(test))]
+        
+        for i in range(len(test)):
+            network[i].id = test[i].id
+            network[i].type = test[i].type
+            network[i].parents = copy.copy(test[i].parents)
+            network[i].children = copy.copy(test[i].children)
+            network[i].connectionWeights = copy.copy(test[i].connectionWeights)
+        
         print("dumping")
-        pickle.dump(generation[0]["brain"], file)
+        pickle.dump(network, file)
         print("dumped")
         
     printNodesInfo(generation[0]["brain"])

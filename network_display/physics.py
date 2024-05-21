@@ -2,8 +2,12 @@ import numpy as np
 import time
 from cythonized import norm
 import math
-from neural_network import node, printNodesInfo, getIndexFromID
 import pickle
+
+def getIndexFromID(nodes, id):
+    for i, node in enumerate(nodes):
+        if node.id == id:
+            return i
 
 def calculateAngle(coord):
     """
@@ -102,10 +106,7 @@ unmovingBallIDs = []
 
 with open('C:/Google_Drive/Programming/ai/cart slider proper attempt/Cart-Slider-AI/test.pickle', 'rb') as file:
     
-    #print(pickle.load(file))
     nn = pickle.load(file)
-
-#printNodesInfo(nn)
 
 # get number of input/output nodes
 inputNodes = len([node for node in nn if node.type == "input"]) - 1

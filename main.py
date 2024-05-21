@@ -5,6 +5,7 @@ import copy
 import time
 import threading
 import queue
+#import network_display.display as display
 
 previousTime = 0
 startTime = time.time()
@@ -12,6 +13,7 @@ deltaTime = 0
 threadsToUse = 10
 step = int(len(nn.generation)/threadsToUse)
 resultQueue = queue.Queue()
+#networkScreen = display.init()
 
 def threadedUpdateEnv(generation):
     global threadsToUse, step, resultQueue
@@ -48,15 +50,14 @@ def main():
         global previousTime, startTime, deltaTime
         
         # Update Objects
-        
+        print(nn.generation[0]["frames alive"], nn.generation[0]["frames alive"] % nn.generationLength)
         nn.generation = threadedUpdateEnv(nn.generation)
         
-        if nn.generation[0]["frames alive"] % 10 == 0:
-            print(nn.generation[0]["frames alive"])
         
         # Reset everything for new generation
 
-        if nn.generation[0]["frames alive"] % nn.generationLength == 0:
+        if nn.generation[0]["frames alive"] % nn.generationLength == 3:
+            print("new generation")
             
             deltaTime = time.time() - previousTime
             previousTime = time.time()
@@ -78,6 +79,8 @@ def main():
                 with open(f'.generation.txt', 'wb') as file:#{int(nn.generation[0]["frames alive"]/nn.generationLength)}.txt', 'wb') as file:
                     # Pickle the list and write it to the file
                     pickle.dump(nn.generation[0], file)
+                    
+            #display.main(display.screen)
             
             nn.nextGeneration = copy.deepcopy(nn.generation[:int(len(nn.generation) * 0.3)])
             
@@ -89,19 +92,11 @@ def main():
                                         
             nn.generation = copy.deepcopy(nn.nextGeneration)
             
-            """for agent in nn.generation:
-                print(agent["brain"][-1].id, agent["brain"][-1].parents)"""
-            
-            """for i, agent in enumerate(nn.generation):
-                if any(any(node.parents) in node.children for node in agent["brain"]):
-                    print("ERROR: CYCLE DETECTED IN AGENT", i)
-                    print(agent["most recent mutation"])
-                    nn.printNodesInfo(agent["brain"])"""
-            
             for agent in nn.generation:
                 agent["brain"] = nn.sortNodes(agent["brain"])
                 agent["fitness"] = 0
                 agent["environment"] = copy.deepcopy(nn.physics.environment)
+                agent["frames alive"] = 0
                 
 if __name__ == "__main__":
     main()

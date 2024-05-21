@@ -1,8 +1,5 @@
 import pygame
-from neural_network import node, printNodesInfo
-import physics
-import math
-import numpy as np
+import network_display.physics as physics
 
 def drawObjects(screen, centreCoord):
     
@@ -15,17 +12,17 @@ def drawObjects(screen, centreCoord):
         
         pygame.draw.line(screen, colour, coordinate1, coordinate2, width=thickness)
         
-    for object in physics.balls:
+    for ball in physics.balls:
         
-        coordinate = (object.position[0] + centreCoord[0], centreCoord[1] - object.position[1])
-        radius = object.size
-        colour = object.colour
+        coordinate = (ball.position[0] + centreCoord[0], centreCoord[1] - ball.position[1])
+        radius = ball.size
+        colour = ball.colour
         
         pygame.draw.circle(screen, colour, coordinate, radius)
 
 i = 0
 fps = 0
-def updateFrame(screen, centreCoord, font):
+def updateFrame(screen, centreCoord):
     global i, fps
     i+=1
 
@@ -35,33 +32,34 @@ def updateFrame(screen, centreCoord, font):
     
     pygame.display.flip()
 
-def main():
+def init():
     
     pygame.init()
 
     screen = pygame.display.set_mode((860, 640), pygame.RESIZABLE)
     
-    pygame.font.init()
-    font = pygame.font.SysFont('Comic Sans MS', 30)
     
     drawObjects(screen, (screen.get_width()/2, screen.get_height()/2))
 
     pygame.display.flip()
+    
+    return screen
+    
+def main(screen):
 
-    while True:
-
+    for i in range(10):
         centreCoord = (screen.get_width()/2, screen.get_height()/2)
         
         # Update Objects
         physics.main()
 
         # Update Screen
-        updateFrame(screen,centreCoord, font)
-        
-        # Check if user has quit
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
+        updateFrame(screen,centreCoord)
                 
-if __name__ == "__main__":
-    main()
+#main(screen)
+
+"""while True:
+    # Check if user has quit
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()"""
