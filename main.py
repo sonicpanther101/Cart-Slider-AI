@@ -16,6 +16,7 @@ resultQueue = queue.Queue()
 framesRun = 0
 
 def threadedUpdateEnv(generation):
+
     global threadsToUse, step, resultQueue
     threads = []
     
@@ -30,17 +31,17 @@ def threadedUpdateEnv(generation):
         threads.append(thread)
         thread.start()
         
-    results = []
     for thread in threads:
         thread.join()
     
+    results = []
     while not resultQueue.empty():
         results.append(resultQueue.get())
-        
-    generation = []
-    for subList in results:
-        generation.extend(subList)
-            
+    
+    generation = copy.deepcopy(results[0])
+    
+    assert len(generation) == len(nn.generation), f"The number of agents has changed unexpectedly, {len(generation)} vs {len(nn.generation)}"
+                
     return generation
 
 def main():
@@ -51,9 +52,8 @@ def main():
     while True:
         
         # Update Objects
-        print(len(nn.generation))
         nn.generation = threadedUpdateEnv(nn.generation)
-        print("post",len(nn.generation))
+        
         framesRun += 1
         if framesRun % 100 == 0:
             print(framesRun)
@@ -97,9 +97,9 @@ def main():
                     print("dumped")
             
             if framesRun/nn.generationLength == 1:
-                networkScreen = display.init()
+                display.networkScreen = display.init()
             print("updating screen")
-            display.main(networkScreen)
+            display.main(display.networkScreen)
             
             nn.nextGeneration = copy.deepcopy(nn.generation[:int(len(nn.generation) * 0.3)])
             

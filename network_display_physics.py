@@ -115,8 +115,8 @@ def getNewNetwork():
         nn = pickle.load(file)
 
     # get number of input/output nodes
-    inputNodes = len([node for node in nn["brain"] if node.type == "input"]) - 1
-    outputNodes = len([node for node in nn["brain"] if node.type == "output"]) - 1
+    inputNodes = len([node for node in nn if node.type == "input"]) - 1
+    outputNodes = len([node for node in nn if node.type == "output"]) - 1
 
     inputNodeSeperation = 600 / inputNodes if inputNodes > 0 else 0
     outputNodeSeperation = 600 / outputNodes if outputNodes > 0 else 300
@@ -124,7 +124,7 @@ def getNewNetwork():
     inputNodesAdded = 0
     outputNodesAdded = 1
 
-    for node in nn["brain"]:
+    for node in nn:
         match node.type:
             case "input":
                 balls.append(ball(13, [-400,300 - inputNodeSeperation * inputNodesAdded], [0,0], [0,0], (255, 0, 0), node.id))
@@ -137,7 +137,7 @@ def getNewNetwork():
             case "hidden":
                 balls.append(ball(10, [0,0], [0,0], [0,0], (0, 255, 0), node.id))
 
-    for node in nn["brain"]:
+    for node in nn:
         
         for childID in node.children:
             links.append(link(balls[getIndexFromID(balls, node.id)], balls[getIndexFromID(balls, childID)], 0, 2, (255, 255, 0)))
@@ -156,5 +156,5 @@ def main():
     
     if deltaTime != 0:
 
-        for i in range(subSteps):
+        for _ in range(subSteps):
             solverVariable.update(links, balls, deltaTime/subSteps)

@@ -22,6 +22,8 @@ def drawObjects(screen, centreCoord):
 
 i = 0
 fps = 0
+networkScreen = 0
+
 def updateFrame(screen, centreCoord):
     global i, fps
     i+=1

@@ -108,6 +108,7 @@ def stepForwardOneFrame(subGeneration, offset, resultQueue):
     for agentID, agent in enumerate(subGeneration):
         agentID += offset
         
+        
         # Update Physics frame
                 
         physics.main(agent["environment"])
@@ -285,7 +286,7 @@ nodes = sortNodes(nodes)
 generation = [{"brain" : copy.deepcopy(nodes),
                "environment":copy.deepcopy(physics.environment),
                "fitness":0,
-               "most recent mutation":0} for i in range(1000)]
+               "most recent mutation":0} for i in range(100)]
 generationLength = 300 # in frames of environment 100 fps for 100s so 10000
 
 nextGeneration = []
