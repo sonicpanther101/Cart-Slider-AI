@@ -1,9 +1,9 @@
 import pygame
-import network_display.physics as physics
+import network_display_physics as network_display_physics
 
 def drawObjects(screen, centreCoord):
     
-    for link in physics.links:
+    for link in network_display_physics.links:
         
         coordinate1 = (link.ball1.position[0] + centreCoord[0], centreCoord[1] - link.ball1.position[1])
         coordinate2 = (link.ball2.position[0] + centreCoord[0], centreCoord[1] - link.ball2.position[1])
@@ -12,7 +12,7 @@ def drawObjects(screen, centreCoord):
         
         pygame.draw.line(screen, colour, coordinate1, coordinate2, width=thickness)
         
-    for ball in physics.balls:
+    for ball in network_display_physics.balls:
         
         coordinate = (ball.position[0] + centreCoord[0], centreCoord[1] - ball.position[1])
         radius = ball.size
@@ -46,12 +46,14 @@ def init():
     return screen
     
 def main(screen):
+    
+    network_display_physics.getNewNetwork()
 
     for i in range(10):
         centreCoord = (screen.get_width()/2, screen.get_height()/2)
         
         # Update Objects
-        physics.main()
+        network_display_physics.main()
 
         # Update Screen
         updateFrame(screen,centreCoord)

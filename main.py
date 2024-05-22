@@ -5,20 +5,20 @@ import copy
 import time
 import threading
 import queue
-#import network_display.display as display
+import network_display as display
 
 previousTime = 0
 startTime = time.time()
 deltaTime = 0
-threadsToUse = 10
+threadsToUse = 1
 step = int(len(nn.generation)/threadsToUse)
 resultQueue = queue.Queue()
-#networkScreen = display.init()
+framesRun = 0
 
 def threadedUpdateEnv(generation):
     global threadsToUse, step, resultQueue
     threads = []
-        
+    
     for i in range(threadsToUse):
         
         startIndex = step * i
@@ -40,32 +40,36 @@ def threadedUpdateEnv(generation):
     generation = []
     for subList in results:
         generation.extend(subList)
-        
+            
     return generation
 
 def main():
+    global previousTime, startTime, deltaTime, framesRun
 
+    previousTime = time.time()
+    
     while True:
         
-        global previousTime, startTime, deltaTime
-        
         # Update Objects
-        print(nn.generation[0]["frames alive"], nn.generation[0]["frames alive"] % nn.generationLength)
+        print(len(nn.generation))
         nn.generation = threadedUpdateEnv(nn.generation)
-        
+        print("post",len(nn.generation))
+        framesRun += 1
+        if framesRun % 100 == 0:
+            print(framesRun)
         
         # Reset everything for new generation
 
-        if nn.generation[0]["frames alive"] % nn.generationLength == 3:
+        if framesRun % nn.generationLength == 0:
             print("new generation")
             
             deltaTime = time.time() - previousTime
             previousTime = time.time()
             
-            if nn.generation[0]["frames alive"]/nn.generationLength == 5:
+            if framesRun/nn.generationLength == 5:
                 exit()
             
-            print(f'Generation {nn.generation[0]["frames alive"]/nn.generationLength:.0f}')
+            print(f'Generation {framesRun/nn.generationLength:.0f}')
             print(f"generation took {(deltaTime):.2f} seconds")
             
             nn.generation = nn.sortGenerationByFitness(nn.generation)
@@ -74,13 +78,28 @@ def main():
             print("most recent mutation:", nn.generation[0]["most recent mutation"])
             nn.printNodesInfo(nn.generation[0]["brain"])
             
-            if nn.generation[0]["frames alive"]/nn.generationLength != 1:
+            if framesRun/nn.generationLength != 1:
                 # Open a file for writing in binary mode
-                with open(f'.generation.txt', 'wb') as file:#{int(nn.generation[0]["frames alive"]/nn.generationLength)}.txt', 'wb') as file:
-                    # Pickle the list and write it to the file
-                    pickle.dump(nn.generation[0], file)
+                with open(f'.generation.txt', 'wb') as file:
+                    test = copy.deepcopy(nn.generation[0]["brain"])
+                    from neural_network import node
+                    network = [node(i) for i in range(len(test))]
                     
-            #display.main(display.screen)
+                    for i in range(len(test)):
+                        network[i].id = test[i].id
+                        network[i].type = test[i].type
+                        network[i].parents = copy.copy(test[i].parents)
+                        network[i].children = copy.copy(test[i].children)
+                        network[i].connectionWeights = copy.copy(test[i].connectionWeights)
+                    
+                    print("dumping")
+                    pickle.dump(network, file)
+                    print("dumped")
+            
+            if framesRun/nn.generationLength == 1:
+                networkScreen = display.init()
+            print("updating screen")
+            display.main(networkScreen)
             
             nn.nextGeneration = copy.deepcopy(nn.generation[:int(len(nn.generation) * 0.3)])
             
@@ -96,7 +115,8 @@ def main():
                 agent["brain"] = nn.sortNodes(agent["brain"])
                 agent["fitness"] = 0
                 agent["environment"] = copy.deepcopy(nn.physics.environment)
-                agent["frames alive"] = 0
+                
+            print("new generation created")
                 
 if __name__ == "__main__":
     main()

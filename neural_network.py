@@ -131,17 +131,12 @@ def stepForwardOneFrame(subGeneration, offset, resultQueue):
         
         agent["brain"] = resetNodes(agent["brain"])
         
-        if agent["frames alive"] % 100 == 0:
-            pass#(f'agent {agentID}\ny of pendulum: {agent["environment"]["balls"][1].position[1]}\noutput: {output}')
-        
         agent["environment"]["cartVelocity"] = np.array([output,0])
         
         # update fitness
         
         agent["fitness"] += fitness(agent["environment"]["balls"][1].position[1])
-        
-        agent["frames alive"] += 1
-        
+                
         resultQueue.put(subGeneration)
 
 def sortGenerationByFitness(generation):
@@ -168,11 +163,11 @@ def mutateAgents(agentsToMutate):
     
     mutatedAgents = []
     
-    for agentTemp in agentsToMutate:
+    for _, agentTemp in enumerate(agentsToMutate):
         agent = copy.deepcopy(agentTemp)
-        """print("pre mutation agent:", agentIndex)
-        printNodesInfo(agent["brain"])
-        print("-"*30)"""
+        
+        if _ % 100 == 0:
+            print("_",_,"/",len(agentsToMutate))
         
         options = [0,1]
         
@@ -290,9 +285,8 @@ nodes = sortNodes(nodes)
 generation = [{"brain" : copy.deepcopy(nodes),
                "environment":copy.deepcopy(physics.environment),
                "fitness":0,
-               "frames alive": 0,
-               "most recent mutation":0} for i in range(100)]
-generationLength = 1000 # in frames of environment 100 fps for 100s so 10000
+               "most recent mutation":0} for i in range(1000)]
+generationLength = 300 # in frames of environment 100 fps for 100s so 10000
 
 nextGeneration = []
 
