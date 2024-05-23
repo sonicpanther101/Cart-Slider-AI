@@ -58,6 +58,9 @@ def main():
         if framesRun % 100 == 0:
             print(framesRun)
             
+        if framesRun % 50 == 0 and framesRun/nn.generationLength > 1:
+            display.pygame.event.pump()
+            
         # Reset everything for new generation
 
         if framesRun % nn.generationLength == 0:

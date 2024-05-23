@@ -104,6 +104,17 @@ balls = []
 links = []
 unmovingBallIDs = []
 
+def getColourFromWeight(weight):
+    if weight > 0:
+        return (0, 255, 0)
+    elif weight < 0:
+        return (255, 0, 0)
+    else:
+        return (0, 0, 0)
+    
+def getWidthFromWeight(weight):
+    return int((abs(weight)*4) + 1)
+
 def getNewNetwork():
     global balls, links, unmovingBallIDs
     balls = []
@@ -140,7 +151,9 @@ def getNewNetwork():
     for node in nn:
         
         for childID in node.children:
-            links.append(link(balls[getIndexFromID(balls, node.id)], balls[getIndexFromID(balls, childID)], 0, 2, (255, 255, 0)))
+            childIndex = node.children.index(childID)
+            weight = node.connectionWeights[childIndex]
+            links.append(link(balls[getIndexFromID(balls, node.id)], balls[getIndexFromID(balls, childID)], 0, getWidthFromWeight(weight), getColourFromWeight(weight)))
 
 previousTime = 0
 startTime = time.time()
