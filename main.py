@@ -55,10 +55,10 @@ def main():
         nn.generation = threadedUpdateEnv(nn.generation)
         
         framesRun += 1
-        if framesRun % 100 == 0:
+        if framesRun % 250 == 0:
             print(framesRun)
             
-        if framesRun % 50 == 0 and framesRun/nn.generationLength > 1:
+        if framesRun % 100 == 0 and framesRun/nn.generationLength > 1:
             display.pygame.event.pump()
             
         # Reset everything for new generation
@@ -73,7 +73,7 @@ def main():
                 exit()"""
             
             print(f'Generation {framesRun/nn.generationLength:.0f}')
-            print(f"generation took {(deltaTime):.2f} seconds")
+            print(f"generation took {deltaTime:.2f} seconds / {deltaTime/60:.2f} minutes")
             
             nn.generation = nn.sortGenerationByFitness(nn.generation)
             
