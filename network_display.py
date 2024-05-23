@@ -1,4 +1,5 @@
 import pygame
+import asyncio
 import network_display_physics as network_display_physics
 
 def drawObjects(screen, centreCoord):
@@ -44,7 +45,7 @@ def init():
     drawObjects(screen, (screen.get_width()/2, screen.get_height()/2))
 
     pygame.display.flip()
-    
+        
     return screen
     
 def main(screen):

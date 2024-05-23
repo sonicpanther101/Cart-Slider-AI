@@ -1,4 +1,3 @@
-i=0
-while i < 100000000:
-    i+=1
-print("done")
+import random
+
+print(random.randint(0, 1))

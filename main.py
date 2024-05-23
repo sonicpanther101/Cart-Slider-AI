@@ -57,7 +57,7 @@ def main():
         framesRun += 1
         if framesRun % 100 == 0:
             print(framesRun)
-        
+            
         # Reset everything for new generation
 
         if framesRun % nn.generationLength == 0:
@@ -66,8 +66,8 @@ def main():
             deltaTime = time.time() - previousTime
             previousTime = time.time()
             
-            if framesRun/nn.generationLength == 5:
-                exit()
+            """if framesRun/nn.generationLength == 5:
+                exit()"""
             
             print(f'Generation {framesRun/nn.generationLength:.0f}')
             print(f"generation took {(deltaTime):.2f} seconds")
