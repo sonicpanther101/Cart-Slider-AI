@@ -60,10 +60,8 @@ def main(screen):
         # Update Screen
         updateFrame(screen,centreCoord)
                 
-#main(screen)
-
-"""while True:
-    # Check if user has quit
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()"""
+if __name__ == "__main__":
+    screen = init()
+    main(screen)
+    while True:
+        pass
