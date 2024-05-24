@@ -2,68 +2,55 @@
 #include <string>
 #include <random>
 #include <cmath>
+#include <iostream>
+using namespace std;
 
 class Node {
-public:
-    Node(int id, const std::string& type = "hidden");  // Constructor
-
-    int id;
-    // Bias initialization omitted (unclear behavior in Python code)
-    std::vector<int> parents;
-    std::vector<int> children;
-    std::vector<double> connectionWeights;
-    double value;
-    std::string type;
-    std::string colour;  // Renamed for C++ convention
-
-    void calculate(const std::vector<Node>& nodes);
-
-private:
-    // Helper function to set colour based on type
-    void setColor();
-    static std::vector<Node> nodes;
-};
-
-Node::Node(int id, const std::string& type) : id(id), type(type) {
-    setColor();
-};
-
-void Node::setColor() {
-    if (type == "input") {
-        colour = "blue";
-    } else if (type == "output") {
-        colour = "red";
-    } else if (type == "hidden") {
-        colour = "green";
-    } else {
-        // Handle invalid type (optional: throw an exception)
-    }
-}
-
-void Node::calculate(const std::vector<Node>& nodes) {
-    // Bias initialization omitted (unclear behavior in Python code)
-
-    if (children.empty()) {
-        value = tanh(value);
-    } else if (!parents.empty()) {
-        value = relu(value);
-    }
-
-    for (int childID : children) {
-        for (const Node& childNode : nodes) {
-            if (childNode.id == childID) {
-                childNode.value += value * connectionWeights[children.indexOf(childID)];
-                break;  // Optimization: Exit inner loop once child is found
+    public:
+        // Constructor with basic initialization
+        Node(int nodeID, const string& nodeType = "hidden") : id(nodeID), type(nodeType) {
+            if (type == "input") {
+                colour = "red";
+            } else if (type == "output") {
+                colour = "blue";
+            } else if (type == "hidden") {
+                colour = "green";
+            } else {
+                colour = "unknown"; // Handle unexpected node types
             }
         }
+
+        int id;
+        int value = 0;
+        vector<int> parents;
+        vector<int> children;
+        vector<double> connectionWeights;
+        string type;
+        string colour;
+};
+
+// Function to create and initialize nodes
+vector<Node> createNodes() {
+    vector<Node> nodes;
+
+    for (int i = 0; i < 4; ++i) {
+        nodes.emplace_back(i, "input");
     }
+
+    nodes.emplace_back(4, "output");
+
+  return nodes;
 }
 
-// Implement tanh and relu functions here (replace with your preferred implementations)
-double tanh(double x) {
-    return std::tanh(x);
-}
+int main() {
+  // Create nodes (call the function to create and initialize nodes)
+  vector<Node> nodes = createNodes();
 
-double relu(double x) {
-    return std::max(0.0, x);
+  // Print node information (id, type, color)
+  cout << "Nodes:" << endl;
+  for (const auto& node : nodes) {
+    cout << node.id <<  " " << node.type << " " << node.colour << endl;
+  }
+
+  return 0;
 }
