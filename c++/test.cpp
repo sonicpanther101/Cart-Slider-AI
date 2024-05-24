@@ -28,7 +28,7 @@ class NodeClass {
         string type;
         string colour;
 
-        void calculate() const {
+        void calculate() {
             cout << "Calculating node " << id << endl;
             // Add calculation code here
         }
@@ -53,7 +53,7 @@ int main() {
 
   // Print node information (id, type, color)
   cout << "Nodes:" << endl;
-  for (const auto& node : nodes) {
+  for (auto& node : nodes) {
     cout << node.id <<  " " << node.type << " " << node.colour << endl;
 
     node.calculate();
