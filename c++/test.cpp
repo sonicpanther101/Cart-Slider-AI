@@ -45,6 +45,8 @@ class NodeClass {
         }
 
         int id;
+        mt19937 mt{};
+        double bias = mt();
         double value = 0;
         vector<int> parents;
         vector<int> children;
@@ -154,6 +156,7 @@ void printNodeInfo(NodeClass node) {
         {"parents", "[" + join(node.parents, ", ") + "]"},
         {"children", "[" + join(node.children, ", ") + "]"},
         {"connectionWeights", "[" + join(node.connectionWeights, ", ") + "]"},
+        {"bias", to_string(node.bias)},
         {"type", node.type},
         {"value", to_string(node.value)},
         {"colour", node.colour}
