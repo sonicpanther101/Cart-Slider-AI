@@ -3,7 +3,10 @@
 #include <random>
 #include <cmath>
 #include <iostream>
-#include <bits/stdc++.h> 
+#include <sstream>
+#include <algorithm>
+#include<ctime>
+//#include <chrono>
 using namespace std;
 
 template <typename S>
@@ -41,12 +44,11 @@ class NodeClass {
                 colour = "green";
             } else {
                 colour = "unknown"; // Handle unexpected node types
-            }
+            }            
         }
 
         int id;
-        mt19937 mt{};
-        double bias = mt();
+        double bias = (((double)rand() / (RAND_MAX))*2.0) - 1.0;
         double value = 0;
         vector<int> parents;
         vector<int> children;
@@ -66,11 +68,11 @@ size_t getIndexFromID(vector<NodeClass> nodes, int id) {
 }
 
 vector<NodeClass> calculate(vector<NodeClass> nodes, NodeClass node) {
-    cout << "Calculating node " << node.id << endl;
+    node.value += node.bias;
 
-    if (node.type == "output") {
+    if (node.type == "output") { // hyperbolic tangent
         node.value = tanh(node.value);
-    } else {
+    } else { // ReLU
         node.value = max(0.0, node.value);
     }
 
@@ -86,13 +88,13 @@ vector<NodeClass> calculate(vector<NodeClass> nodes, NodeClass node) {
 }
 
 vector<NodeClass> removeNode(vector<NodeClass> nodes, size_t nodeIndex) {
-    unique_ptr<vector<NodeClass>> tempNodes = make_unique<vector<NodeClass>>(move(nodes));
+    vector<NodeClass> tempNodes(nodes);
 
-    tempNodes->erase(tempNodes->begin() + static_cast<int>(nodeIndex));
+    tempNodes.erase(tempNodes.begin() + static_cast<int>(nodeIndex));
 
     for (const double& childID : nodes[nodeIndex].children) {
 
-        for (NodeClass& childNode : *tempNodes) {
+        for (NodeClass& childNode : tempNodes) {
             if (childNode.id == childID) {
 
                 childNode.parents.erase(find(childNode.parents.begin(), childNode.parents.end(), nodes[nodeIndex].id));
@@ -100,23 +102,23 @@ vector<NodeClass> removeNode(vector<NodeClass> nodes, size_t nodeIndex) {
         }
     }
 
-    return *tempNodes;
+    return tempNodes;
 }
 
 vector<NodeClass> sortNodes(vector<NodeClass> nodes) {
 
+    vector<NodeClass> tempNodes(nodes);
     vector<NodeClass> sortedNodes;
-    unique_ptr<vector<NodeClass>> tempNodes = make_unique<vector<NodeClass>>(move(nodes));
 
-    while (tempNodes->size() > 0) {
-        
+    while (tempNodes.size() > 0) {
+                
         vector<NodeClass> nodesToProcess;
         vector<int> nodeIndexesToRemove;
 
-        for (size_t i = 0; i < nodes.size(); ++i) {
-            if ((*tempNodes)[i].parents.empty()) {
+        for (size_t i = 0; i < tempNodes.size(); ++i) {
+            if ((tempNodes)[i].parents.empty()) {
 
-                size_t realIndex = getIndexFromID(nodes, (*tempNodes)[i].id);
+                size_t realIndex = getIndexFromID(nodes, (tempNodes)[i].id);
                 nodesToProcess.push_back(nodes[realIndex]);
                 nodeIndexesToRemove.push_back(static_cast<int>(i));
             }
@@ -124,7 +126,7 @@ vector<NodeClass> sortNodes(vector<NodeClass> nodes) {
 
         sort(nodeIndexesToRemove.begin(), nodeIndexesToRemove.end(), greater<>());
         for (const int& nodeIndex : nodeIndexesToRemove) {
-            *tempNodes = removeNode(*tempNodes, static_cast<size_t>(nodeIndex));
+            tempNodes = removeNode(tempNodes, static_cast<size_t>(nodeIndex));
         }
 
         for (const NodeClass& node : nodesToProcess) {
@@ -199,18 +201,120 @@ void printNodesOrder(vector<NodeClass> nodes) {
     cout << "[" << join(nodesOrder, ", ") << "]" << endl;
 }
 
+struct Agent {
+  vector<NodeClass> brain = sortNodes(createNodes(4));
+  //vector</*Physics environment type*/> environment;  // Replace with the environment type
+  double fitness;
+  string mostRecentMutation;
+};
+
+bool anyBrainHasChildren(const Agent& agent) {
+    for (const NodeClass& node : agent.brain) {
+        if (!node.children.empty()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+vector<Agent> mutateAgents(vector<Agent> agentsToMutate) {
+    
+    vector<Agent> mutatedAgents;
+
+    for (Agent& agentTemp : agentsToMutate) {
+        Agent agent(agentTemp);
+
+        vector<int> options = {0,1,4};
+
+        if (anyBrainHasChildren(agent)) {
+            options.push_back(2);
+            options.push_back(3);
+        }
+
+        switch (rand() % options.size()) {
+            case 0:
+                //cout << "Nothing" << endl;
+                agent.mostRecentMutation = "Nothing";
+                break;
+            
+            case 1:
+                //cout << "New Connection" << endl;
+                break;
+
+            case 2:
+                //cout << "New Node" << endl;
+                break;
+
+            case 3:
+                //cout << "Weight Modification" << endl;
+
+                vector<int> unusableNodes;
+                int tries = 0;
+                while (unusableNodes.size() != agent.brain.size() && tries < 100) {
+                    ++tries;
+
+                    size_t randomNodeIndex = rand() % (agent.brain.size() - 1); // -1 to avout output node
+
+                    if (agent.brain[randomNodeIndex].connectionWeights.empty()) {
+                        unusableNodes.push_back(agent.brain[randomNodeIndex].id);
+                        continue;
+                    }
+
+                    size_t randomWeightIndex = rand() % agent.brain[randomNodeIndex].connectionWeights.size();
+
+                    agent.brain[randomNodeIndex].connectionWeights[randomWeightIndex] += (((double)rand() / (RAND_MAX))*2.0) - 1.0;
+                    agent.mostRecentMutation = "Weight Modification of node " + to_string(agent.brain[randomNodeIndex].id) + " connection " + to_string(agent.brain[randomNodeIndex].connectionWeights[randomWeightIndex]);
+                }
+                break;
+
+            case 4:
+                //cout << "Bias Modification" << endl;
+
+                size_t randomNodeIndex = rand() % agent.brain.size();
+
+                agent.brain[randomNodeIndex].bias = (((double)rand() / (RAND_MAX))*2.0) - 1.0;
+                agent.mostRecentMutation = "Bias Modification of node " + to_string(agent.brain[randomNodeIndex].id);
+                break;
+
+            default:
+                cout << "Bug" << endl;
+                break;
+        }
+    }
+}
+
 int main() {
+
+    srand(static_cast<unsigned int>(time(0)));
+
     // Create nodes (call the function to create and initialize nodes)
-    vector<NodeClass> nodes = createNodes(4);
-    nodes[0].connectionWeights = {1.0, 1.0, 1.0, 1.0};
-    nodes[0].children = {4};
-    nodes[4].parents = {0};
-    nodes[0].value = 5.0;
+    const int populationSize = 1000;
+    vector<Agent> generation(populationSize);
+    /*for (int i = 0; i < 4; ++i) {
+        nodes.emplace_back(i+5);
+    }
+    nodes[0].children = {5,7};
+    nodes[1].children = {7};
+    nodes[2].children = {8};
+    nodes[3].children = {7,8};
+
+    nodes[7].parents = {0,1,3};
+    nodes[7].children = {5,6,8};
+
+    nodes[5].parents = {0,7};
+    nodes[5].children = {4};
+    nodes[6].parents = {7};
+    nodes[6].children = {4};
+    nodes[8].parents = {2,3,7};
+    nodes[8].children = {4};
+
+    nodes[4].parents = {5,6,8};*/
 
     // Print node information (id, type, color)
     cout << "Nodes:" << endl;
-    nodes = sortNodes(nodes);
-    printNodesOrder(nodes);
+    printNodesInfo(generation[0].brain);
+    generation[0].brain = sortNodes(generation[0].brain);
+    printNodesOrder(generation[0].brain);
 
     return 0;
 }
