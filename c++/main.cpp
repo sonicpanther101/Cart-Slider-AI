@@ -228,6 +228,14 @@ vector<Agent> mutateAgents(vector<Agent> agentsToMutate) {
         vector<int> unusableNodes;
         int tries = 0;
         size_t randomNodeIndexBias = (size_t)rand() % agent.brain.size();
+        size_t node1Index;
+        size_t node2Index;
+        size_t randomNode1Index;
+        size_t randomNode2Index;
+        size_t childIndex;
+        int randomNode1ID;
+        int randomNode2ID;
+        int newNodeID;
 
         if (anyBrainHasChildren(agent)) {
             options.push_back(2);
@@ -246,18 +254,72 @@ vector<Agent> mutateAgents(vector<Agent> agentsToMutate) {
                 while (tries < 100) {
                     ++tries;
 
-                    size_t node1Index = (size_t)rand() % agent.brain.size();
-                    size_t node2Index = (size_t)rand() % agent.brain.size();
+                    node1Index = (size_t)rand() % agent.brain.size();
+                    node2Index = (size_t)rand() % agent.brain.size();
 
-                    if (node1Index < node2Index) {
+                    if (node1Index < node2Index 
+&& ((agent.brain[node1Index].type == "input") + (agent.brain[node2Index].type == "input") <= 1)
+&& ((agent.brain[node1Index].type == "output") + (agent.brain[node2Index].type == "output") <= 1)
+&& (find(agent.brain[node1Index].children.begin(), agent.brain[node1Index].children.end(), agent.brain[node2Index].id) == agent.brain[node1Index].children.end())
+&& (find(agent.brain[node2Index].parents.begin(), agent.brain[node2Index].parents.end(), agent.brain[node1Index].id) == agent.brain[node2Index].parents.end())) {
                         break;
                     }
                 }
 
+                if (tries != 100) {
+                    agent.brain[node1Index].children.push_back(agent.brain[node2Index].id);
+                    agent.brain[node1Index].connectionWeights.push_back((((double)rand() / (RAND_MAX))*2.0) - 1.0);
+                    agent.brain[node2Index].parents.push_back(agent.brain[node1Index].id);
+
+                    agent.mostRecentMutation = "New Connection between nodes " + to_string(agent.brain[node1Index].id) + " and " + to_string(agent.brain[node2Index].id);
+                }
                 break;
 
             case 2:
                 //cout << "New Node" << endl;
+
+                while (unusableNodes.size() != agent.brain.size() && tries < 100) {
+                    ++tries;
+
+                    randomNode1Index = (size_t)rand() % (agent.brain.size() - 1); // -1 to avout output node
+
+                    if (agent.brain[randomNode1Index].children.empty()) {
+                        unusableNodes.push_back(agent.brain[randomNode1Index].id);
+                        continue;
+                    }
+
+                    randomNode2ID = agent.brain[randomNode1Index].children[(size_t)rand() % agent.brain[randomNode1Index].children.size()];
+                    randomNode2Index = getIndexFromID(agent.brain, randomNode2ID);
+                    randomNode1ID = agent.brain[randomNode1Index].id;
+                    newNodeID = static_cast<int>(agent.brain.size());
+                    
+                    // check if nodes are connected
+                    if (
+(find(agent.brain[randomNode1Index].children.begin(), agent.brain[randomNode1Index].children.end(), randomNode2ID) == agent.brain[randomNode1Index].children.end()) || 
+(find(agent.brain[randomNode2Index].parents.begin(), agent.brain[randomNode2Index].parents.end(), randomNode1ID) == agent.brain[randomNode2Index].parents.end())) {
+                        continue;
+                    }
+
+                    // Break the old connection
+                    childIndex = static_cast<size_t>(find(agent.brain[randomNode1Index].children.begin(), agent.brain[randomNode1Index].children.end(), randomNode2ID) - (agent.brain[randomNode1Index].children.begin()));
+                    agent.brain[randomNode1Index].children.erase(agent.brain[randomNode1Index].children.begin() + static_cast<int>(childIndex));
+                    agent.brain[randomNode1Index].connectionWeights.erase(agent.brain[randomNode1Index].connectionWeights.begin() + static_cast<int>(childIndex));
+                    agent.brain[randomNode2Index].parents.erase(find(agent.brain[randomNode2Index].parents.begin(), agent.brain[randomNode2Index].parents.end(), randomNode1ID));
+
+                    // Add the new connection
+                    agent.brain[randomNode1Index].children.push_back(newNodeID);
+                    agent.brain[randomNode1Index].connectionWeights.push_back((((double)rand() / (RAND_MAX))*2.0) - 1.0);
+                    agent.brain[randomNode2Index].parents.push_back(randomNode1ID);
+
+                    // Add the new node
+                    agent.brain.push_back(NodeClass(newNodeID));
+                    agent.brain[agent.brain.size() - 1].parents.push_back(randomNode1ID);
+                    agent.brain[agent.brain.size() - 1].children.push_back(randomNode2ID);
+                    agent.brain[agent.brain.size() - 1].connectionWeights.push_back((((double)rand() / (RAND_MAX))*2.0) - 1.0);
+                    agent.mostRecentMutation = "New Node between nodes " + to_string(randomNode1ID) + " and " + to_string(randomNode2ID);
+
+                }
+
                 break;
 
             case 3:
