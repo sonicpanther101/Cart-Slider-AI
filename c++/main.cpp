@@ -227,7 +227,7 @@ vector<Agent> mutateAgents(vector<Agent> agentsToMutate) {
         vector<int> options = {0,1,4};
         vector<int> unusableNodes;
         int tries = 0;
-        size_t randomNodeIndexBias = (size_t)rand() % agent.brain.size();
+        size_t randomNodeIndexBias;
         size_t node1Index;
         size_t node2Index;
         size_t randomNode1Index;
@@ -344,6 +344,7 @@ vector<Agent> mutateAgents(vector<Agent> agentsToMutate) {
 
             case 4:
                 //cout << "Bias Modification" << endl;
+                randomNodeIndexBias = (size_t)rand() % agent.brain.size();
 
                 agent.brain[randomNodeIndexBias].bias = (((double)rand() / (RAND_MAX))*2.0) - 1.0;
                 agent.mostRecentMutation = "Bias Modification of node " + to_string(agent.brain[randomNodeIndexBias].id);
