@@ -214,7 +214,7 @@ def mutateAgents(agentsToMutate):
                 while len(unusableNodes) != len(agent["brain"]) and tries < 100:
                     tries += 1
                 
-                    randomNode1Index = random.randint(0, len(agent["brain"])-1) # -2 to avoid output node
+                    randomNode1Index = random.randint(0, len(agent["brain"])-2) # -2 to avoid output node
                     
                     if len(agent["brain"][randomNode1Index].children) == 0:
                         unusableNodes.append(randomNode1Index)
