@@ -6,7 +6,6 @@
 #include <sstream>
 #include <algorithm>
 #include<ctime>
-//#include <chrono>
 using namespace std;
 
 template <typename S>
@@ -20,12 +19,12 @@ ostream& operator<<(ostream& os, const vector<S>& vector) {
 }
 
 template <typename T>
-std::string join(const std::vector<T>& vector, const std::string& delimiter) {
-    std::stringstream ss;
+string join(const vector<T>& vector, const string& delimiter) {
+    stringstream ss;
     for (const auto& element : vector) {
         ss << element << delimiter;
     }
-    std::string result = ss.str();
+    string result = ss.str();
     if (!result.empty()) {
         result.erase(result.size() - delimiter.size()); // Remove the last delimiter
     }
@@ -204,8 +203,8 @@ void printNodesOrder(vector<NodeClass> nodes) {
 struct Agent {
   vector<NodeClass> brain = sortNodes(createNodes(4));
   //vector</*Physics environment type*/> environment;  // Replace with the environment type
-  double fitness;
-  string mostRecentMutation;
+  double fitness = 0;
+  string mostRecentMutation = "";
 };
 
 bool anyBrainHasChildren(const Agent& agent) {

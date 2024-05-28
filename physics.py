@@ -55,7 +55,7 @@ class ball:
                 self.position[0] = -250
             elif self.position[0] > 250:
                 self.position[0] = 250
-        self.acceleration = self.acceleration * 0
+
         if self.id == 1:
             self.position = self.position + velocity + self.acceleration * deltaTime * deltaTime
             linearVelocity = velocity / deltaTime
@@ -134,3 +134,6 @@ def main(environment):
 
         for i in range(subSteps):
             environment["solver"].update(environment["links"], environment["balls"], deltaTime/subSteps, environment["cartVelocity"])
+            
+if __name__ == "__main__":
+    main(environment)
