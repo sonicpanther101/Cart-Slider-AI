@@ -6,6 +6,7 @@
 #include <sstream>
 #include <algorithm>
 #include<ctime>
+#include "NodeClass.h"
 using namespace std;
 
 template <typename S>
@@ -30,31 +31,6 @@ string join(const vector<T>& vector, const string& delimiter) {
     }
     return result;
 }
-
-class NodeClass {
-    public:
-        // Constructor with basic initialization
-        NodeClass(int nodeID, const string& nodeType = "hidden") : id(nodeID), type(nodeType) {
-            if (type == "input") {
-                colour = "red";
-            } else if (type == "output") {
-                colour = "blue";
-            } else if (type == "hidden") {
-                colour = "green";
-            } else {
-                colour = "unknown"; // Handle unexpected node types
-            }            
-        }
-
-        int id;
-        double bias = (((double)rand() / (RAND_MAX))*2.0) - 1.0;
-        double value = 0;
-        vector<int> parents;
-        vector<int> children;
-        vector<double> connectionWeights;
-        string type;
-        string colour;
-};
 
 size_t getIndexFromID(vector<NodeClass> nodes, int id) {
     for (size_t i = 0; i < nodes.size(); ++i) {

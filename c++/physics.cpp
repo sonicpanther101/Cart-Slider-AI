@@ -106,32 +106,27 @@ size(inputSize), position(inputPosition), acceleration(inputAcceleration), colou
         int id;
         long double angularVelocity = 0;
 
-        map<string, vector<long double>> updatePosition(long double deltaTime, Ball cart, vector<long double> cartVelocity) {
-            vector<long double> velocity = subtract(position, oldPosition);
-            oldPosition = position;
+        Ball updatePosition(Ball ball, long double deltaTime, Ball cart, vector<long double> cartVelocity) {
+            vector<long double> velocity = subtract(ball.position, ball.oldPosition);
+            ball.oldPosition = ball.position;
 
             if (id == 0) {
-                position = add(position, multiply(cartVelocity, {deltaTime,deltaTime}));
-                cout << position[0] << endl;
-                if (-250 > position[0]) {
-                    position[0] = -250;
-                } else if (250 < position[0]) {
-                    position[0] = 250;
+                ball.position = add(ball.position, multiply(cartVelocity, {deltaTime,deltaTime}));
+                if (-250 > ball.position[0]) {
+                    ball.position[0] = -250;
+                } else if (250 < ball.position[0]) {
+                    ball.position[0] = 250;
                 }
             }
             if (id == 1) {
-                position = add(position, add(velocity, multiply(acceleration, {deltaTime*deltaTime,deltaTime*deltaTime})));
+                ball.position = add(ball.position, add(velocity, multiply(ball.acceleration, {deltaTime*deltaTime,deltaTime*deltaTime})));
                 vector<long double> linearVelocity = divide(velocity, {deltaTime,deltaTime});
-                long double theta = (M_PI - calculateAngle(subtract(position, cart.position))) - (M_PI - calculateAngle(linearVelocity));
+                long double theta = (M_PI - calculateAngle(subtract(ball.position, cart.position))) - (M_PI - calculateAngle(linearVelocity));
                 long double velocityTangential = sin(theta) * norm(linearVelocity);
-                angularVelocity = velocityTangential / norm(subtract(position, cart.position));
+                ball.angularVelocity = velocityTangential / norm(subtract(ball.position, cart.position));
             }
 
-            map<string, vector<long double>> mapOfValues;
-            mapOfValues["position"] = position;
-            mapOfValues["oldPosition"] = oldPosition;
-            mapOfValues["angularVelocity"] = {angularVelocity, angularVelocity};
-            return mapOfValues;
+            return ball;
         }
 
         Ball accelerate(vector<long double> acc) {
@@ -166,9 +161,10 @@ class Solver {
     public:
         vector<long double> gravity = {0, -100};
 
-        vector<Ball> update(vector<Link> links, vector<Ball> balls, long double deltaTime, long double cartVelocity) {
+        vector<Ball> update(vector<Link> links, vector<Ball>& balls, long double deltaTime, long double cartVelocity) {
             balls = applyGravity(balls);
             balls = solveLinks(links);
+            cout << balls[0].position[0] << endl;
             balls = updatePositions(balls, deltaTime, cartVelocity);
             return balls;
         }
@@ -190,16 +186,11 @@ class Solver {
 
         vector<Ball> updatePositions(vector<Ball>& balls, long double deltaTime, long double cartVelocity) {
             for (Ball& ball : balls) {
-                map<string, vector<long double>> mapOfValues = ball.updatePosition(deltaTime, balls[0], {cartVelocity, 0});
-
-                ball.position = mapOfValues["position"];
-                ball.oldPosition = mapOfValues["oldPosition"];
-                ball.angularVelocity = mapOfValues["angularVelocity"][0];
+                ball = ball.updatePosition(ball, deltaTime, balls[0], {cartVelocity, 0});
             }
             return balls;
         }
 };
-
 
 // Function to create and initialize balls
 vector<Ball> createBalls() {
@@ -232,11 +223,12 @@ int main() {
 
     if (deltaTime != 0) {
         for (int i = 0; i < 10; ++i) {
+            cout << environment.balls[0].position[0] << endl;
             environment.balls = environment.update(deltaTime / subSteps);
+            cout << environment.balls[0].position[0] << endl;
         }
     }
 
-    cout << environment.balls[0].position[0] << endl;
 
     return 0;
 }
