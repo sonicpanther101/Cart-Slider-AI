@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include "physics.h"
 using namespace std;
 #pragma once
 
@@ -28,12 +29,6 @@ class NodeClass {
         string colour;
 };
 
-struct Agent {
-  vector<NodeClass> brain = sortNodes(createNodes(4));
-  //vector</*Physics environment type*/> environment;  // Replace with the environment type
-  double fitness = 0;
-  string mostRecentMutation = "";
-};
 
 size_t getIndexFromID(vector<NodeClass> nodes, int id);
 vector<NodeClass> calculate(vector<NodeClass> nodes, NodeClass node);
@@ -45,5 +40,18 @@ void printNodesInfo(vector<NodeClass> nodes);
 vector<NodeClass> calculateNodes(vector<NodeClass> nodes);
 vector<NodeClass> resetNodes(vector<NodeClass> nodes);
 void printNodesOrder(vector<NodeClass> nodes);
+
+struct Agent {
+    vector<NodeClass> brain = sortNodes(createNodes(4));
+    Environment environment;
+    double fitness = 0;
+    string mostRecentMutation = "";
+};
+
 bool anyBrainHasChildren(const Agent& agent);
 vector<Agent> mutateAgents(vector<Agent> agentsToMutate);
+vector<Agent> createAgents(int size);
+
+extern const int populationSize = 100;
+extern const int generationLength = 10000; // in frames of environment 100 fps for 100s so 10000
+extern vector<Agent> generation;

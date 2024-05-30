@@ -327,38 +327,34 @@ vector<Agent> mutateAgents(vector<Agent> agentsToMutate) {
     return mutatedAgents;
 }
 
-int main() {
+vector<Agent> createAgents(int size) {
+
+    vector<Agent> agents;
+    for (int i = 0; i < size; ++i) {
+        agents.push_back(Agent());
+    }
+    return agents;
+}
+
+int NNInit() {
 
     srand(static_cast<unsigned int>(time(0)));
 
-    // Create nodes (call the function to create and initialize nodes)
-    const int populationSize = 1000;
-    vector<Agent> generation(populationSize);
-    /*for (int i = 0; i < 4; ++i) {
-        nodes.emplace_back(i+5);
-    }
-    nodes[0].children = {5,7};
-    nodes[1].children = {7};
-    nodes[2].children = {8};
-    nodes[3].children = {7,8};
+    vector<Agent> newGeneration = createAgents(populationSize);
 
-    nodes[7].parents = {0,1,3};
-    nodes[7].children = {5,6,8};
+    generation = newGeneration;
 
-    nodes[5].parents = {0,7};
-    nodes[5].children = {4};
-    nodes[6].parents = {7};
-    nodes[6].children = {4};
-    nodes[8].parents = {2,3,7};
-    nodes[8].children = {4};
-
-    nodes[4].parents = {5,6,8};*/
-
-    // Print node information (id, type, color)
-    cout << "Nodes:" << endl;
-    printNodesInfo(generation[0].brain);
-    generation[0].brain = sortNodes(generation[0].brain);
-    printNodesOrder(generation[0].brain);
+    /*cout << "Nodes:" << endl;
+    printNodesInfo(NNGlobal::generation[0].brain);
+    NNGlobal::generation[0].brain = sortNodes(NNGlobal::generation[0].brain);
+    printNodesOrder(NNGlobal::generation[0].brain);*/
 
     return 0;
+}
+
+vector<Agent> generation;
+
+int main() {
+
+    NNInit();
 }
