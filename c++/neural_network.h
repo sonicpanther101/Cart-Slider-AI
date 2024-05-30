@@ -28,6 +28,13 @@ class NodeClass {
         string colour;
 };
 
+struct Agent {
+  vector<NodeClass> brain = sortNodes(createNodes(4));
+  //vector</*Physics environment type*/> environment;  // Replace with the environment type
+  double fitness = 0;
+  string mostRecentMutation = "";
+};
+
 size_t getIndexFromID(vector<NodeClass> nodes, int id);
 vector<NodeClass> calculate(vector<NodeClass> nodes, NodeClass node);
 vector<NodeClass> removeNode(vector<NodeClass> nodes, size_t nodeIndex);

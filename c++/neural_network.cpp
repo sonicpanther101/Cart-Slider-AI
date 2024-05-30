@@ -6,7 +6,7 @@
 #include <sstream>
 #include <algorithm>
 #include<ctime>
-#include "NodeClass.h"
+#include "neural_network.h"
 using namespace std;
 
 template <typename S>
@@ -175,13 +175,6 @@ void printNodesOrder(vector<NodeClass> nodes) {
 
     cout << "[" << join(nodesOrder, ", ") << "]" << endl;
 }
-
-struct Agent {
-  vector<NodeClass> brain = sortNodes(createNodes(4));
-  //vector</*Physics environment type*/> environment;  // Replace with the environment type
-  double fitness = 0;
-  string mostRecentMutation = "";
-};
 
 bool anyBrainHasChildren(const Agent& agent) {
     for (const NodeClass& node : agent.brain) {
