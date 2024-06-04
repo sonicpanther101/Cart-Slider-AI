@@ -20,7 +20,7 @@ vector<long double> subtract(const vector<long double>& vec1, const vector<long 
     }
     vector<long double> result(vec1.size());
     for (size_t i = 0; i < vec1.size(); ++i) {
-        result[i] = vec1[i] + vec2[i];
+        result[i] = vec1[i] - vec2[i];
     }
     return result;
 }
@@ -101,12 +101,14 @@ vector<Ball> createBalls() {
 
 int update(long double deltaTime = 0.01) {
 
-    environment.cartVelocity = 1234;
+    Environment tempEnv = environment;
+
+    tempEnv.cartVelocity = 1234;
 
     if (deltaTime != 0) {
         for (int i = 0; i < 10; ++i) {
-            cout << environment.balls[0].position[0] << endl;
-            environment.balls = environment.update(deltaTime / subSteps);
+            cout << tempEnv.balls[0].position[0] << endl;
+            tempEnv.balls = tempEnv.update(deltaTime / subSteps);
         }
     }
 
@@ -114,12 +116,10 @@ int update(long double deltaTime = 0.01) {
     return 0;
 }
 
-Environment environment;
-int subSteps;
+Environment environment = Environment();
+int subSteps = 1;
 
 int main() {
-    environment = Environment();
-    subSteps = 1;
     update(0.01);
     return 0;
 }
