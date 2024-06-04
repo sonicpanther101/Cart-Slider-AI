@@ -25,31 +25,31 @@ size(inputSize), position(inputPosition), acceleration(inputAcceleration), colou
         int id;
         long double angularVelocity = 0;
 
-        Ball updatePosition(Ball ball, long double deltaTime, Ball cart, vector<long double> cartVelocity) {
-            vector<long double> velocity = subtract(ball.position, ball.oldPosition);
-            ball.oldPosition = ball.position;
+        Ball updatePosition(long double deltaTime, Ball cart, vector<long double> cartVelocity) {
+            vector<long double> velocity = subtract(this->position, this->oldPosition);
+            this->oldPosition = this->position;
 
             if (id == 0) {
-                ball.position = add(ball.position, multiply(cartVelocity, {deltaTime,deltaTime}));
-                if (-250 > ball.position[0]) {
-                    ball.position[0] = -250;
-                } else if (250 < ball.position[0]) {
-                    ball.position[0] = 250;
+                this->position = add(this->position, multiply(cartVelocity, {deltaTime,deltaTime}));
+                if (-250 > this->position[0]) {
+                    this->position[0] = -250;
+                } else if (250 < this->position[0]) {
+                    this->position[0] = 250;
                 }
             }
             if (id == 1) {
-                ball.position = add(ball.position, add(velocity, multiply(ball.acceleration, {deltaTime*deltaTime,deltaTime*deltaTime})));
+                this->position = add(this->position, add(velocity, multiply(this->acceleration, {deltaTime*deltaTime,deltaTime*deltaTime})));
                 vector<long double> linearVelocity = divide(velocity, {deltaTime,deltaTime});
-                long double theta = (M_PI - calculateAngle(subtract(ball.position, cart.position))) - (M_PI - calculateAngle(linearVelocity));
+                long double theta = (M_PI - calculateAngle(subtract(this->position, cart.position))) - (M_PI - calculateAngle(linearVelocity));
                 long double velocityTangential = sin(theta) * norm(linearVelocity);
-                ball.angularVelocity = velocityTangential / norm(subtract(ball.position, cart.position));
+                this->angularVelocity = velocityTangential / norm(subtract(this->position, cart.position));
             }
 
-            return ball;
+            return *this;
         }
 
         Ball accelerate(vector<long double> acc) {
-            acceleration = add(acceleration, acc);
+            this->acceleration = add(this->acceleration, acc);
             return *this;
         }
 };
@@ -58,23 +58,23 @@ vector<Ball> createBalls();
 
 class Link {
     public:
-        Link(Ball inputBall1, Ball inputBall2, int inputTargetDistance, int inputThickness, vector<int> inputColour) : 
-        ball1(inputBall1), ball2(inputBall2), targetDistance(inputTargetDistance), thickness(inputThickness), colour(inputColour) {}
+        Link(size_t inputBall1ID, size_t inputBall2ID, int inputTargetDistance, int inputThickness, vector<int> inputColour) : 
+        ball1ID(inputBall1ID), ball2ID(inputBall2ID), targetDistance(inputTargetDistance), thickness(inputThickness), colour(inputColour) {}
 
-        Ball ball1, ball2;
+        size_t ball1ID, ball2ID;
         int targetDistance;
         int thickness;
         vector<int> colour;
 
-        vector<Ball> apply() {
-            vector<long double> axis = subtract(ball1.position, ball2.position);
+        vector<Ball> apply(vector<Ball> balls) {
+            vector<long double> axis = subtract(balls[ball1ID].position, balls[ball2ID].position);
             long double distance = norm(axis);
             vector<long double> normal = divide(axis, {distance, distance});
             long double delta = targetDistance - distance;
 
-            ball2.position = subtract(ball2.position, multiply(normal, {delta, delta}));
+            balls[ball2ID].position = subtract(balls[ball2ID].position, multiply(normal, {delta, delta}));
 
-            return {ball1, ball2};
+            return balls;
         }
 };
 
@@ -84,7 +84,7 @@ class Solver {
 
         vector<Ball> update(vector<Link> links, vector<Ball>& balls, long double deltaTime, long double cartVelocity) {
             balls = applyGravity(balls);
-            balls = solveLinks(links);
+            balls = solveLinks(links, balls);
             balls = updatePositions(balls, deltaTime, cartVelocity);
             return balls;
         }
@@ -96,17 +96,16 @@ class Solver {
             return balls;
         }
 
-        vector<Ball> solveLinks(vector<Link>& links) {
-            vector<Ball> balls;
+        vector<Ball> solveLinks(vector<Link>& links, vector<Ball> balls) {
             for (Link& link : links) {
-                balls = link.apply();
+                balls = link.apply(balls);
             }
             return balls;
         }
 
         vector<Ball> updatePositions(vector<Ball>& balls, long double deltaTime, long double cartVelocity) {
             for (Ball& ball : balls) {
-                ball = ball.updatePosition(ball, deltaTime, balls[0], {cartVelocity, 0});
+                ball = ball.updatePosition(deltaTime, balls[0], {cartVelocity, 0});
             }
             return balls;
         }
@@ -114,7 +113,7 @@ class Solver {
 
 struct Environment {
     vector<Ball> balls = createBalls();
-    vector<Link> links = {Link(balls[0], balls[1], 100, 5, {0, 0, 255})};
+    vector<Link> links = {Link(0, 1, 100, 5, {0, 0, 255})};
     Solver solver = Solver();
     long double cartVelocity = 0;
 
