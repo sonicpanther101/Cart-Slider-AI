@@ -55,13 +55,13 @@ class ball:
                 self.position[0] = -250
             elif self.position[0] > 250:
                 self.position[0] = 250
-        self.acceleration = self.acceleration * 0
         if self.id == 1:
             self.position = self.position + velocity + self.acceleration * deltaTime * deltaTime
             linearVelocity = velocity / deltaTime
             theta = (math.pi-calculateAngle(self.position-cart.position))-(math.pi-calculateAngle(linearVelocity))
             velocityTangential = math.sin(theta) * norm(linearVelocity)
             self.angularVelocity = velocityTangential / norm(self.position-cart.position)
+        self.acceleration = self.acceleration * 0
 
     def accelerate(self, acc):
         self.acceleration = self.acceleration + acc
