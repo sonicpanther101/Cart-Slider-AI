@@ -6,10 +6,10 @@ import pickle
 class node:
     def __init__(self, id, type="hidden"):
         self.id = id
-        #self.bias = random.uniform(-1, 1) # not sure on this one
+        self.bias = random.uniform(-1, 1)
         self.parents = []
         self.children = []
-        self.connectionWeights = []  # This will be initialized separately based on children
+        self.connectionWeights = []
         self.value = 0
         self.type = type
         match type:
@@ -21,7 +21,7 @@ class node:
                 self.colour = "green"
     
     def calculate(self, nodes):
-        #self.value += self.bias
+        self.value += self.bias
         
         if len(self.children) == 0:
             self.value = tanh(self.value)
@@ -170,7 +170,7 @@ def mutateAgents(agentsToMutate):
         if _ % 100 == 0:
             print("_",_,"/",len(agentsToMutate))
         
-        options = [0,1]
+        options = [0,1,4]
         
         if any(len(agent["brain"][i].children) > 0 for i in range(len(agent["brain"]))):
             options.append(2)
@@ -270,6 +270,13 @@ def mutateAgents(agentsToMutate):
                     agent["most recent mutation"] = f"Weight Modification of node {getIDFromIndex(agent["brain"],randomNodeIndex)} connection {getIDFromIndex(agent["brain"],randomWeightIndex)}"
                     break
                 #print("weight modified")
+            
+            case 4: # Bias Modification
+                #print("Bias Modification")
+                    
+                randomNodeIndex = random.randint(0, len(agent["brain"])-2) # -2 to avoid output node
+                
+                agent["brain"][randomNodeIndex].bias = random.uniform(-1, 1)
         
         """print("post mutation agent:", agentIndex)
         printNodesInfo(agent["brain"])
