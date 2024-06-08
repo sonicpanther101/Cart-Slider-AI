@@ -92,9 +92,7 @@ def main(cartPosX, stickPosX, stickPosY, cartVelX, oldStickPosX, oldStickPosY, s
         frames += 1
         
         stickPosX, stickPosY, angularVelocity, cartPosX, oldStickPosX, oldStickPosY = nn.physics.main(cartPosX, stickPosX, stickPosY, cartVelX, oldStickPosX, oldStickPosY, stickAccX, stickAccY, subSteps, solverVariable)
-        
-        print(stickPosY[0])
-        
+                
         updateFrame(screen,centreCoord, cartPosX, stickPosX, stickPosY)
 
 if __name__ == "__main__":

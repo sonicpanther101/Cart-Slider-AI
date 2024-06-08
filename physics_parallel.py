@@ -7,7 +7,7 @@ class solver:
         pass
 
     def update(self, deltaTime, cartPosX, stickPosX, stickPosY, cartVelX, oldStickPosX, oldStickPosY, stickAccX, stickAccY):
-        #stickPosX, stickPosY = applyLinks(cartPosX, stickPosX, stickPosY)
+        stickPosX, stickPosY = applyLinks(cartPosX, stickPosX, stickPosY)
         cartPosX = updateCartPositions(deltaTime, cartVelX, cartPosX)
         stickPosX, stickPosY, angularVelocity, oldStickPosX, oldStickPosY = updateStickPositions(deltaTime, stickPosX, stickPosY, oldStickPosX, oldStickPosY, stickAccX, stickAccY, cartPosX)
         return stickPosX, stickPosY, angularVelocity, cartPosX, oldStickPosX, oldStickPosY
@@ -22,9 +22,7 @@ def applyLinks(cartPosX, stickPosX, stickPosY):
         
     stickPosX = stickPosX - (normalX * delta)
     stickPosY = stickPosY - (normalY * delta)
-    
-    print(f"{stickPosX[0]:.2f}, {stickPosY[0]:.2f}")
-    
+        
     return stickPosX, stickPosY
     
     
@@ -82,7 +80,7 @@ def main(cartPosX, stickPosX, stickPosY, cartVelX, oldStickPosX, oldStickPosY, s
     
     if previousTime == 0:
         previousTime = time.time()
-    deltaTime = 1/1000#time.time() - previousTime
+    deltaTime = time.time() - previousTime #1/1000
     previousTime = time.time()
         
     for _ in range(subSteps):
