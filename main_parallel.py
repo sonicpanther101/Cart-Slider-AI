@@ -7,6 +7,7 @@ import pygame
 solverVariable = nn.physics.solver()
 
 subSteps = 10
+framesRun = 0
 framesPerGen = 10000 # in frames of environment 100 fps for 100s so 10000
 numOfAgents = 10
 initialNodesPerAgent = 5
@@ -37,11 +38,38 @@ nodeColour = cupy.tile((cupy.array(["blue"] * (initialNodesPerAgent-1) + ["red"]
 fitness = copy.deepcopy(emptyArray)
 mostRecentMutation = ["" for _ in range(numOfAgents)]
 
-def main(cartPosX, stickPosX, stickPosY, cartVelX, oldStickPosX, oldStickPosY, stickAccX, stickAccY, subSteps, solverVariable):
+def main(framesRun, cartPosX, stickPosX, stickPosY, cartVelX, oldStickPosX, oldStickPosY, stickAccX, stickAccY, subSteps, solverVariable):
     
     while True:
         
+        if cupy.sum(nodesPerAgent) != len(nodeIDs):
+            print("Error: nodesPerAgent does not equal len(nodeIDs)")
+        
         stickPosX, stickPosY, angularVelocity, cartPosX, oldStickPosX, oldStickPosY = nn.physics.main(cartPosX, stickPosX, stickPosY, cartVelX, oldStickPosX, oldStickPosY, stickAccX, stickAccY, subSteps, solverVariable)
+
+        # set cart position in nodes
+        cartXInputIndices = cupy.cumsum(cupy.insert(nodesPerAgent, 0, 0))[:-1]
+        mask = cupy.arange(len(nodeValues)) < cartXInputIndices[:, cupy.newaxis]
+        nodeValues[mask] = cartPosX
+        
+        # set stick X direction in nodes
+        stickXInputIndices = cartXInputIndices + 1
+        mask = cupy.arange(len(nodeValues)) < stickXInputIndices[:, cupy.newaxis]
+        nodeValues[mask] = cartPosX - stickPosX
+        
+        # set stick Y direction in nodes
+        stickYInputIndices = cartXInputIndices + 2
+        mask = cupy.arange(len(nodeValues)) < stickYInputIndices[:, cupy.newaxis]
+        nodeValues[mask] = -stickPosY
+        
+        # set angular velocity in nodes
+        angularVelocityInputIndices = cartXInputIndices + 3
+        mask = cupy.arange(len(nodeValues)) < angularVelocityInputIndices[:, cupy.newaxis]
+        nodeValues[mask] = angularVelocity
+        
+        framesRun += 1
+        if framesRun % 250 == 0:
+            print(framesRun)
                 
 if __name__ == "__main__":
-    main(cartPosX, stickPosX, stickPosY, cartVelX, oldStickPosX, oldStickPosY, stickAccX, stickAccY, subSteps, solverVariable)
+    main(framesRun, cartPosX, stickPosX, stickPosY, cartVelX, oldStickPosX, oldStickPosY, stickAccX, stickAccY, subSteps, solverVariable)

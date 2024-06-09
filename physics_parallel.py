@@ -80,7 +80,7 @@ def main(cartPosX, stickPosX, stickPosY, cartVelX, oldStickPosX, oldStickPosY, s
     
     if previousTime == 0:
         previousTime = time.time()
-    deltaTime = time.time() - previousTime #1/1000
+    deltaTime = 1/1000 # time.time() - previousTime
     previousTime = time.time()
         
     for _ in range(subSteps):
