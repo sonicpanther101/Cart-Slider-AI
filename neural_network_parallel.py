@@ -18,7 +18,7 @@ def sortNodes(nodeIDs, nodeParents):
     tempNodeIDs = nodeIDs[:]
     tempNodeParents = copy.deepcopy(nodeParents)
 
-    sortedNodeIDs = cupy.array([])
+    sortedNodeIDs = cupy.zeros((len(nodeIDs),))
 
     while len(tempNodeIDs) > 0:
 
@@ -26,7 +26,9 @@ def sortNodes(nodeIDs, nodeParents):
         nodeIDsToRemove = cupy.array([])
 
         mask = cupy.shape(nodeParents)[1] == 0
+        
+        totalMask = ()
 
-        sortedNodeIDs.extend(nodeIDs[mask])
+        sortedNodeIDs[totalMask] = nodeIDs[mask])
 
         tempNodeIDs, tempNodeParents = removeNodes(tempNodeIDs, nodeIDs[mask], nodeParents)
